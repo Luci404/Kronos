@@ -1,0 +1,3 @@
+[submodule "Kronos/Vendor/imgui"]
+	path = Kronos/Vendor/imgui
+	url = https://github.com/Luci404/imgui/
