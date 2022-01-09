@@ -1,0 +1,7 @@
+[submodule "Kronos/Vendor/imgui"]
+	path = Kronos/Vendor/imgui
+	url = https://github.com/ocornut/imgui
+    branch = master
+[submodule "Kronos/Vendor/glfw"]
+	path = Kronos/Vendor/glfw
+	url = https://github.com/glfw/glfw
