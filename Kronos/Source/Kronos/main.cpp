@@ -27,6 +27,7 @@ constexpr Ref<T> CreateRef(Args&& ... args) { return std::make_shared<T>(std::fo
 
 namespace Kronos
 {
+	/*
 	class SystemCore
 	{
 	public:
@@ -77,25 +78,26 @@ namespace Kronos
 	public:
 		virtual void Initialize() override { KRONOS_CORE_TRACE("Initializing LoggingSystem..."); }
 		virtual void Terminate() override { KRONOS_CORE_TRACE("Terminating LoggingSystem..."); }
-	};
+	};*/
 
 	class Application
 	{
 	public:
 		Application(const std::string& name = "Kronos Application") 
 		{
-			m_SystemManager = CreateScope<SystemManager>();
-			m_SystemManager->AddSystem<LoggingSystem>();
-			m_SystemManager->Initialize();
+			//m_SystemManager = CreateScope<SystemManager>();
+			//m_SystemManager->AddSystem<LoggingSystem>();
+			//m_SystemManager->Initialize();
 		}
 
 		virtual ~Application() 
 		{
-			m_SystemManager->Terminate();
+			//m_SystemManager->Terminate();*/
 		}
 
 	private:
-		Scope<SystemManager> m_SystemManager;
+		//Scope<SystemManager> m_SystemManager;
+	
 	};
 }
 
