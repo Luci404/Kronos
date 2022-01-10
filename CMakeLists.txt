@@ -23,13 +23,18 @@ project(Kronos)
 file(GLOB_RECURSE KRONOS_HEADERS "${CMAKE_SOURCE_DIR}/Kronos/Source/*.h")
 file(GLOB_RECURSE KRONOS_SOURCES "${CMAKE_SOURCE_DIR}/Kronos/Source/*.cpp")
 include_directories(AFTER "${CMAKE_SOURCE_DIR}/Kronos/Source")
-add_executable(Kronos ${KRONOS_HEADERS} ${KRONOS_SOURCES})
+add_executable(Kronos "${KRONOS_HEADERS}" "${KRONOS_SOURCES}")
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES "${KRONOS_HEADERS}" "${KRONOS_SOURCES}")
 
 target_link_libraries(Kronos glad)
+set_target_properties(glad PROPERTIES FOLDER "Dependencies/glad")
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 target_link_libraries(Kronos glfw)
+set_target_properties(glfw PROPERTIES FOLDER "Dependencies/glfw")
 
 target_link_libraries(Kronos imgui)
+set_target_properties(imgui PROPERTIES FOLDER "Dependesncies/imgui")
