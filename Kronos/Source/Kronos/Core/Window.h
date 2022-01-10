@@ -15,6 +15,10 @@ namespace Kronos
 
         virtual void Update();
 
+        void TMP_ImGuiBegin();
+        void TMP_ImGuiEnd();
+        void TMP_OpenGlStuff();
+
     private:
         std::string m_Title;
         uint32_t m_Width;
