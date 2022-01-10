@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
+# glad
+project(glad)
+set(GLAD_DIRECTORY "${CMAKE_SOURCE_DIR}/Kronos/Vendor/glad")
+add_library(glad "${GLAD_DIRECTORY}/include/glad/glad.h" "${GLAD_DIRECTORY}/include/KHR/khrplatform.h" "${GLAD_DIRECTORY}/src/glad.c")
+target_include_directories(glad PUBLIC "${GLAD_DIRECTORY}/include")
+
 # glfw
 add_subdirectory("${CMAKE_SOURCE_DIR}/Kronos/Vendor/glfw")
 
@@ -19,9 +25,11 @@ file(GLOB_RECURSE KRONOS_SOURCES "${CMAKE_SOURCE_DIR}/Kronos/Source/*.cpp")
 include_directories(AFTER "${CMAKE_SOURCE_DIR}/Kronos/Source")
 add_executable(Kronos ${KRONOS_HEADERS} ${KRONOS_SOURCES})
 
-target_link_libraries(Kronos imgui)
+target_link_libraries(Kronos glad)
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 target_link_libraries(Kronos glfw)
+
+target_link_libraries(Kronos imgui)

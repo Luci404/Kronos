@@ -1,5 +1,5 @@
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -32,9 +32,12 @@ int main(int argc, char* argv[])
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    // Initialize glad
+    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
     while (!glfwWindowShouldClose(window))
     {
-        glfwSwapBuffers(window);
+        glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -43,9 +46,14 @@ int main(int argc, char* argv[])
         ImGui::ShowDemoWindow();
 
         ImGui::Render();
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        glfwPollEvents();
+        glfwSwapBuffers(window);
     }
 
     // Terminate ImGui
