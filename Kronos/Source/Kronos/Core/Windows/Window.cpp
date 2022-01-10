@@ -62,7 +62,6 @@ namespace Kronos
 		}
 	}
 
-
 	void Window::Update()
 	{
 		glfwMakeContextCurrent(m_GLFWWindow);
