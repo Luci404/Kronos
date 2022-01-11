@@ -1,19 +1,30 @@
+#include "KronosEditor/EditorLayer.h"
+
 #include "Kronos/Core/Application.h"
 
-class EditorApplication : Kronos::Application
+namespace KronosEditor
 {
-	virtual void Update() override
+	class EditorApplication : public Kronos::Application
 	{
-		Kronos::Application::Update();
-	}
-};
+	public:
+		virtual void Initialize() override
+		{
+			Kronos::Application::Initialize();
 
-int main(int argc, char* argv[])
+			PushLayer(new EditorLayer());
+		}
+	};
+}
+
+int main(int argc, char *argv[])
 {
-	Kronos::Application application;
+	KronosEditor::EditorApplication application;
 
 	application.Initialize();
-	while (true) { application.Update(); }
+	while (true)
+	{
+		application.Update();
+	}
 	application.Terminate();
 
 	return 0;

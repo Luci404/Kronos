@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Kronos/Core/Window.h"
 #include "Kronos/Core/Assert.h"
 #include "Kronos/Core/Log.h"
@@ -13,73 +15,6 @@ namespace Kronos
 		virtual void OnDetach() {}
 		virtual void OnUpdate() {}
 		virtual void OnImGuiRender() {}
-	};
-
-	class EditorLayer : public Layer
-	{
-		virtual void OnImGuiRender() override
-		{
-			// Begin dockspace
-			{
-				ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-
-				ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-				window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-				window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-
-				ImGuiViewport* viewport = ImGui::GetMainViewport();
-				ImGui::SetNextWindowPos(viewport->Pos);
-				ImGui::SetNextWindowSize(viewport->Size);
-				ImGui::SetNextWindowViewport(viewport->ID);
-
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-				ImGui::Begin("DockSpace", (bool*)0, window_flags);
-				ImGui::PopStyleVar(3);
-
-				ImGui::DockSpace(ImGui::GetID("MyDockSpace"), ImVec2(0.0f, 0.0f), dockspace_flags);
-			}
-
-			// Window menu bar
-			{
-				if (ImGui::BeginMenuBar())
-				{
-					if (ImGui::BeginMenu("File"))
-					{
-						ImGui::MenuItem("New", "Ctrl+N");
-						ImGui::MenuItem("Open...", "Ctrl+O");
-						ImGui::MenuItem("Save As...", "Ctrl+Shift+S");
-						ImGui::Separator();
-						ImGui::MenuItem("Exit");
-						ImGui::EndMenu();
-					}
-
-					if (ImGui::BeginMenu("Window"))
-					{
-						ImGui::MenuItem("Editor Preferences", NULL, nullptr);
-						ImGui::EndMenu();
-					}
-
-					ImGui::EndMenuBar();
-				}
-			}
-
-			// Editor preferences
-			{
-				if (ImGui::Begin("Editor Preferences"))
-				{
-					ImGui::TextUnformatted("Test");
-				}
-				ImGui::End();
-			}
-
-			// End dockspace
-			{
-				ImGui::End(); // Dockspace
-			}
-
-		}
 	};
 
 	class LayerStack
@@ -129,11 +64,9 @@ namespace Kronos
 		{
 		}
 
-		void Initialize()
+		virtual void Initialize()
 		{
 			Log::Initialize();
-
-			m_LayerStack.PushLayer(new EditorLayer());
 
 			m_Window = CreateScope<Window>();
 		}
@@ -150,8 +83,13 @@ namespace Kronos
 			m_Window->Update();
 		}
 
-		void Terminate()
+		virtual void Terminate()
 		{
+		}
+
+		void PushLayer(Layer* layer)
+		{
+            m_LayerStack.PushLayer(layer);
 		}
 
 	private:
