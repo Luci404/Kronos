@@ -4,6 +4,8 @@
 
 #include "Kronos/Core/Log.h"
 
+#include <imgui.h>
+
 namespace KronosEditor
 {
     void EditorLayer::OnAttach()
