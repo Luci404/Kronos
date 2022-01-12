@@ -6,9 +6,9 @@ namespace KronosEditor
 {
     void AssetBrowserWindow::Render()
     {
-        if (ImGui::Begin("Editor Preferences"))
+        if (ImGui::Begin("Asset Browser"))
         {
-            ImGui::TextUnformatted("Test");
+            ImGui::TextUnformatted("TODO: Asset Browser");
         }
         ImGui::End();
     }
