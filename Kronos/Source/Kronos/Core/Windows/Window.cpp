@@ -57,9 +57,52 @@ namespace Kronos
 			ImGui_ImplGlfw_InitForOpenGL(m_GLFWWindow, true);
 			ImGui_ImplOpenGL3_Init(glslVersion);
 
-			// Configure ImGui
+			// Load fonts
 			// TODO: Don't use absolute paths...
 			io.FontDefault = io.Fonts->AddFontFromFileTTF("C:/Dev/Kronos/KronosEditor/Assets/Fonts/Consolas/CONSOLA.TTF", 14.0f);
+			
+			// Configure style variables
+			ImGuiStyle& style = ImGui::GetStyle();
+			// Main
+			style.IndentSpacing = 16;
+			style.ScrollbarSize = 12;
+			// Borders
+			style.WindowBorderSize = 0;
+			style.PopupBorderSize = 0;
+			style.FrameBorderSize= 0;
+			style.TabBorderSize= 0;
+			// Rounding
+			style.FrameRounding = 2;
+			style.GrabRounding = 2;
+			// Alignment
+			style.WindowMenuButtonPosition = ImGuiDir_Right;
+			// Colors
+			ImVec4* colors = ImGui::GetStyle().Colors;
+			colors[ImGuiCol_WindowBg] = ImColor(20, 20, 20, 255);
+			colors[ImGuiCol_Button] = ImColor(30, 30, 30, 255);
+			colors[ImGuiCol_FrameBg] = ImColor(35, 35, 35, 255);
+			colors[ImGuiCol_FrameBgHovered] = ImColor(65, 65, 65, 255);
+			colors[ImGuiCol_FrameBgActive] = ImColor(45, 45, 45, 255);
+			colors[ImGuiCol_TitleBg] = ImColor(0, 0, 0, 255);
+			colors[ImGuiCol_TitleBgActive] = ImColor(0, 0, 0, 255);
+			colors[ImGuiCol_TitleBgCollapsed] = ImColor(0, 0, 0, 255);
+			colors[ImGuiCol_ButtonHovered] = ImColor(40, 40, 40, 255);
+			colors[ImGuiCol_ButtonActive] = ImColor(60, 60, 60, 255);
+			colors[ImGuiCol_Header] = ImColor(35, 35, 35, 255);
+			colors[ImGuiCol_HeaderHovered] = ImColor(45, 45, 45, 255);
+			colors[ImGuiCol_HeaderActive] = ImColor(65, 65, 65, 255);
+			colors[ImGuiCol_Separator] = ImColor(35, 35, 35, 255);
+			colors[ImGuiCol_SeparatorHovered] = ImColor(45, 45, 45, 255);
+			colors[ImGuiCol_SeparatorActive] = ImColor(55, 55, 55, 255);
+			colors[ImGuiCol_Tab] = ImColor(35, 35, 35, 255);
+			colors[ImGuiCol_TabHovered] = ImColor(65, 65, 65, 255);
+			colors[ImGuiCol_TabActive] = ImColor(45, 45, 45, 255);
+			colors[ImGuiCol_TabUnfocused] = ImColor(35, 35, 35, 255);
+			colors[ImGuiCol_TabUnfocusedActive] = ImColor(35, 35, 35, 255);
+			colors[ImGuiCol_CheckMark] = ImColor(160, 160, 160, 255);
+
+
+
 
 
 			// Initialize glad
