@@ -7,6 +7,8 @@ namespace KronosEditor
 {
 	void AssetBrowserWindow::Render()
 	{
+		ImGui::ShowDemoWindow();
+
 		if (ImGui::Begin("Asset Browser"))
 		{
 			RenderDirectoryRecursive(std::filesystem::path("C:/Dev/Kronos/"), true);
