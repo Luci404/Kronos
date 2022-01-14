@@ -11,53 +11,65 @@ namespace KronosEditor
 
 		if (ImGui::Begin("Asset Browser"))
 		{
-			RenderDirectoryRecursive(std::filesystem::path("C:/Dev/Kronos/"), true);
+			//ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(20, 20, 20, 255));
+			//ImGui::BeginChild("outer_child", ImVec2(0, ImGui::GetFontSize() * 20.0f), true);
+			RenderDirectoryRecursive(std::filesystem::path("C:/Dev/Kronos"), true);
+			//ImGui::PopStyleColor(1);
+			//ImGui::EndChild();
 		}
 		ImGui::End();
 	}
 
 	// TODO: Shift+Left Click to expand all.
 
-	void AssetBrowserWindow::RenderDirectoryRecursive(const std::filesystem::path& directory, bool expanded)
+	void AssetBrowserWindow::RenderDirectoryRecursive(const std::filesystem::path& directory, bool root)
 	{
-		if (ImGui::TreeNodeEx(directory.parent_path().filename().string().c_str()))
+		if (root)
 		{
-			// Directories
-			std::set<std::filesystem::path> sortedDirectories;
-
-			for (const std::filesystem::directory_entry& directoryEntry : std::filesystem::directory_iterator(directory))
+			if (!ImGui::TreeNodeEx(directory.filename().string().c_str()))
 			{
-				if (directoryEntry.is_directory())
-				{
-					sortedDirectories.insert(directoryEntry.path());
-				}
+				return;
 			}
+		}
 
-			for (const std::filesystem::path& directoryPath : sortedDirectories)
+		// Directories
+		std::set<std::filesystem::path> sortedDirectories;
+
+		for (const std::filesystem::directory_entry& directoryEntry : std::filesystem::directory_iterator(directory))
+		{
+			if (directoryEntry.is_directory())
 			{
-				if (ImGui::TreeNodeEx(directoryPath.filename().string().c_str()))
-				{
-					RenderDirectoryRecursive(directoryPath, expanded);
-					ImGui::TreePop();
-				}
+				sortedDirectories.insert(directoryEntry.path());
 			}
+		}
 
-			// Files
-			std::set<std::filesystem::path> sortedFiles;
-
-			for (const std::filesystem::directory_entry& directoryEntry : std::filesystem::directory_iterator(directory))
+		for (const std::filesystem::path& directoryPath : sortedDirectories)
+		{
+			if (ImGui::TreeNodeEx(directoryPath.filename().string().c_str()))
 			{
-				if (directoryEntry.is_regular_file())
-				{
-					sortedFiles.insert(directoryEntry.path());
-				}
+				RenderDirectoryRecursive(directoryPath, false);
+				ImGui::TreePop();
 			}
+		}
 
-			for (const std::filesystem::path& filePath : sortedFiles)
+		// Files
+		std::set<std::filesystem::path> sortedFiles;
+
+		for (const std::filesystem::directory_entry& directoryEntry : std::filesystem::directory_iterator(directory))
+		{
+			if (directoryEntry.is_regular_file())
 			{
-				ImGui::Text(filePath.filename().string().c_str());
+				sortedFiles.insert(directoryEntry.path());
 			}
+		}
 
+		for (const std::filesystem::path& filePath : sortedFiles)
+		{
+			ImGui::Text(filePath.filename().string().c_str());
+		}
+
+		if (root)
+		{
 			ImGui::TreePop();
 		}
 	}

@@ -69,8 +69,9 @@ namespace Kronos
 			// Borders
 			style.WindowBorderSize = 0;
 			style.PopupBorderSize = 0;
-			style.FrameBorderSize= 0;
-			style.TabBorderSize= 0;
+			style.FrameBorderSize = 0;
+			style.TabBorderSize = 0;
+			style.ChildBorderSize = 0;
 			// Rounding
 			style.FrameRounding = 2;
 			style.GrabRounding = 2;
@@ -78,7 +79,7 @@ namespace Kronos
 			style.WindowMenuButtonPosition = ImGuiDir_Right;
 			// Colors
 			ImVec4* colors = ImGui::GetStyle().Colors;
-			colors[ImGuiCol_WindowBg] = ImColor(20, 20, 20, 255);
+			colors[ImGuiCol_WindowBg] = ImColor(30, 30, 30, 255);
 			colors[ImGuiCol_Button] = ImColor(30, 30, 30, 255);
 			colors[ImGuiCol_FrameBg] = ImColor(35, 35, 35, 255);
 			colors[ImGuiCol_FrameBgHovered] = ImColor(65, 65, 65, 255);
