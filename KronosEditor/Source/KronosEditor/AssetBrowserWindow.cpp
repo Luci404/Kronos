@@ -7,8 +7,6 @@ namespace KronosEditor
 {
 	void AssetBrowserWindow::Render()
 	{
-		ImGui::ShowDemoWindow();
-
 		if (ImGui::Begin("Asset Browser"))
 		{
 			//ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(20, 20, 20, 255));

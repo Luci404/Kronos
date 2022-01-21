@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="yYOrmMYohB1HmC1-BC92" name="Page-1">
-        <mxGraphModel dx="1169" dy="1143" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="974" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -13,30 +13,30 @@
                 <mxCell id="rlvlehiji5V7kBC4I5T0-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=50;" parent="1" source="rlvlehiji5V7kBC4I5T0-1" target="rlvlehiji5V7kBC4I5T0-4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="960" y="280"/>
-                            <mxPoint x="960" y="280"/>
+                            <mxPoint x="900" y="420"/>
+                            <mxPoint x="900" y="420"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="rlvlehiji5V7kBC4I5T0-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=50;" parent="1" source="rlvlehiji5V7kBC4I5T0-1" target="rlvlehiji5V7kBC4I5T0-3" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="720" y="270"/>
-                            <mxPoint x="720" y="270"/>
+                            <mxPoint x="660" y="410"/>
+                            <mxPoint x="660" y="410"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="rlvlehiji5V7kBC4I5T0-1" value="Kronos Engine&lt;br&gt;(static library)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="620" y="140" width="440" height="80" as="geometry"/>
+                    <mxGeometry x="560" y="280" width="440" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="rlvlehiji5V7kBC4I5T0-2" value="&lt;span style=&quot;font-size: 50px&quot;&gt;High-level overview&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
-                    <mxGeometry x="580" y="60" width="520" height="80" as="geometry"/>
+                    <mxGeometry x="520" y="60" width="520" height="80" as="geometry"/>
                 </mxCell>
                 <mxCell id="rlvlehiji5V7kBC4I5T0-3" value="Application&lt;br&gt;(executable)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="620" y="400" width="200" height="120" as="geometry"/>
+                    <mxGeometry x="560" y="540" width="200" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="rlvlehiji5V7kBC4I5T0-4" value="Editor Application&lt;br&gt;(executable)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="860" y="400" width="200" height="120" as="geometry"/>
+                    <mxGeometry x="800" y="540" width="200" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="rlvlehiji5V7kBC4I5T0-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=50;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="rlvlehiji5V7kBC4I5T0-5" target="rlvlehiji5V7kBC4I5T0-3" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -45,7 +45,7 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="rlvlehiji5V7kBC4I5T0-5" value="Hot-reloadable&lt;br&gt;application code&lt;br&gt;(dynamic library)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="740" y="240" width="200" height="120" as="geometry"/>
+                    <mxGeometry x="680" y="380" width="200" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="2" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="1368" y="240" width="791" height="80" as="geometry"/>
@@ -133,6 +133,21 @@
                 </mxCell>
                 <mxCell id="21" value="Gameplay&lt;br&gt;Framework" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;" parent="1" vertex="1">
                     <mxGeometry x="1380" y="270" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="68" value="&lt;span style=&quot;font-size: 50px&quot;&gt;Scheduling Infrastructure&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="2480" y="60" width="790" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="70" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=0;" edge="1" parent="1" source="69" target="rlvlehiji5V7kBC4I5T0-1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="69" value="Lada Renderer&lt;br&gt;(static library)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="560" y="140" width="210" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="73" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="71" target="rlvlehiji5V7kBC4I5T0-1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="Echo Audio&lt;br&gt;(static library)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="790" y="140" width="210" height="100" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

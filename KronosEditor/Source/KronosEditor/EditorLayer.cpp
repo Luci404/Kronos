@@ -73,6 +73,16 @@ namespace KronosEditor
             }
         }
 
+        ImGui::ShowDemoWindow();
+
+        // Todo list
+        {
+            ImGui::Begin("TODO");
+            ImGui::BulletText("Hot-reloading");
+            ImGui::BulletText("Unified architecture");
+            ImGui::End();
+        }
+
         // End dockspace
         {
             ImGui::End(); // Dockspace
