@@ -11,6 +11,6 @@ namespace KronosEditor
     public:
         virtual void Render() override;
     private:
-        void AssetBrowserWindow::RenderDirectoryRecursive(const std::filesystem::path& directory, bool root = true);
+        void DrawDirectoryRecursive(const std::filesystem::path& directory, bool root = true);
     };
 }

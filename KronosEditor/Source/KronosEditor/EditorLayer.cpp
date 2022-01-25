@@ -1,8 +1,10 @@
 #include "KronosEditor/EditorLayer.h"
 
 #include "KronosEditor/AssetBrowserWindow.h"
+#include "KronosEditor/SceneOutlinerWindow.h"
 
 #include "Kronos/Core/Log.h"
+#include "Kronos/Scene/Entity.h" // TMP
 
 #include <imgui.h>
 
@@ -13,6 +15,12 @@ namespace KronosEditor
         KRONOS_CORE_INFO("EditorLayer::OnAttach")
     
         m_EditorWindows.push_back(new AssetBrowserWindow());
+        SceneOutlinerWindow* sceneOutlinerWindow = static_cast<SceneOutlinerWindow*>(m_EditorWindows.emplace_back(new SceneOutlinerWindow()));
+        sceneOutlinerWindow->SetScene(&ActiveScene);
+
+        ActiveScene.CreateEntity<Kronos::Entity>("Entity01"); // TMP
+        ActiveScene.CreateEntity<Kronos::Entity>("Entity02"); // TMP
+        ActiveScene.CreateEntity<Kronos::Entity>("Entity03"); // TMP
     }
 
     void EditorLayer::OnDetach()

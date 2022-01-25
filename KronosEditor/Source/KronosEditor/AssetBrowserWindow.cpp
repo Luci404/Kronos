@@ -11,7 +11,7 @@ namespace KronosEditor
 		{
 			//ImGui::PushStyleColor(ImGuiCol_ChildBg, IM_COL32(20, 20, 20, 255));
 			//ImGui::BeginChild("outer_child", ImVec2(0, ImGui::GetFontSize() * 20.0f), true);
-			RenderDirectoryRecursive(std::filesystem::path("C:/Dev/Kronos"), true);
+			DrawDirectoryRecursive(std::filesystem::path("C:/Dev/Kronos"), true);
 			//ImGui::PopStyleColor(1);
 			//ImGui::EndChild();
 		}
@@ -20,7 +20,7 @@ namespace KronosEditor
 
 	// TODO: Shift+Left Click to expand all.
 
-	void AssetBrowserWindow::RenderDirectoryRecursive(const std::filesystem::path& directory, bool root)
+	void AssetBrowserWindow::DrawDirectoryRecursive(const std::filesystem::path& directory, bool root)
 	{
 		if (root)
 		{
@@ -45,7 +45,7 @@ namespace KronosEditor
 		{
 			if (ImGui::TreeNodeEx(directoryPath.filename().string().c_str()))
 			{
-				RenderDirectoryRecursive(directoryPath, false);
+				DrawDirectoryRecursive(directoryPath, false);
 				ImGui::TreePop();
 			}
 		}
