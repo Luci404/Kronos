@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Scene01", "Scene01\Scene01.vcxproj", "{6CB55A7E-9F7F-4079-AA12-D3F1878550BD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DODArchitecture", "DODArchitecture\DODArchitecture.vcxproj", "{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{6CB55A7E-9F7F-4079-AA12-D3F1878550BD}.Release|x64.Build.0 = Release|x64
 		{6CB55A7E-9F7F-4079-AA12-D3F1878550BD}.Release|x86.ActiveCfg = Release|Win32
 		{6CB55A7E-9F7F-4079-AA12-D3F1878550BD}.Release|x86.Build.0 = Release|Win32
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Debug|x64.ActiveCfg = Debug|x64
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Debug|x64.Build.0 = Debug|x64
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Debug|x86.ActiveCfg = Debug|Win32
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Debug|x86.Build.0 = Debug|Win32
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Release|x64.ActiveCfg = Release|x64
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Release|x64.Build.0 = Release|x64
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Release|x86.ActiveCfg = Release|Win32
+		{0C60C1DB-46DC-4A39-BA76-BAF9D68A6ADD}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

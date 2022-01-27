@@ -24,8 +24,6 @@ class IntegrantRegistry : public IIntegrantRegistry
 private:
     std::array<T, INTEGRANT_REGISTRY_SIZE> m_IntegrantRegistry;
 };
-
-class 
 #pragma endregion
 
 #pragma region Integrants
