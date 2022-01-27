@@ -16,10 +16,19 @@ template<std::derived_from<IIntegrant> T>
 class IntegrantHandle
 {
 public:
+	friend std::hash;
+
+public:
+	IntegrantHandle()
+	{
+	}
+
 	virtual ~IntegrantHandle()
 	{
 		m_Count--;
 	}
+
+	bool operator==(const IntegrantHandle&) const = default;
 
 	static uint16_t GetCount()
 	{
@@ -42,6 +51,16 @@ private:
 };
 
 template<std::derived_from<IIntegrant> T>
+struct std::hash<IntegrantHandle<T>>
+{
+	std::size_t operator()(const IntegrantHandle<T>& integrantHandle) const
+	{
+		return std::hash<uint16_t>()(integrantHandle.m_Identifier);
+	}
+};
+
+
+template<std::derived_from<IIntegrant> T>
 uint16_t IntegrantHandle<T>::m_Count = 0;
 
 // IntegrantPool
@@ -57,23 +76,23 @@ public:
 	IntegrantHandle<T> Insert(T integrant)
 	{
 		// Find available integrant identifier/index.
-		/*size_t integrantIndex = m_Size;
+		size_t integrantIndex = m_Size;
 
 		// Add the integrant to the integrant array, and integrant identifier array.
-		m_IntegrantArray[integrantIndex] = integrant;*/
+		m_IntegrantArray[integrantIndex] = integrant;
 
-		IntegrantHandle<T> integrantHandle = IntegrantHandle<T>(m_Size);
-		/*m_IntegrantHandleToIndexMap[integrantHandle] = integrantIndex;
+		IntegrantHandle<T> integrantHandle = IntegrantHandle<T>((uint16_t)m_Size);
+		m_IntegrantHandleToIndexMap[integrantHandle] = integrantIndex;
 		m_IndexToIntegrantHandleMap[integrantIndex] = integrantHandle;
 
-		m_Size++;*/
+		m_Size++;
 
 		return integrantHandle;
 	}
 
 	void Remove(IntegrantHandle<T> integrantHandle)
 	{
-		/*// TODO: Assert
+		// TODO: Assert
 		size_t integrantIndex = m_IntegrantHandleToIndexMap[integrantHandle];
 
 		// Copy the integrant at end of the array to the deleted element's place to maintain memory density.
@@ -89,12 +108,12 @@ public:
 		m_IntegrantHandleToIndexMap.erase(integrantHandleOfLastElement);
 		m_IndexToIntegrantHandleMap.erase(indexOfRemovedIntegrant);
 
-		--m_Size;*/
+		--m_Size;
 	}
 
 	T& Get(IntegrantHandle<T> integrantHandle)
 	{
-		return m_IntegrantArray[/*m_IntegrantHandleToIndexMap[integrantHandle]*/0];
+		return m_IntegrantArray[m_IntegrantHandleToIndexMap[integrantHandle]];
 	}
 
 private:
