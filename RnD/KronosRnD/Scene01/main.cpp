@@ -82,7 +82,7 @@ public:
     template<std::derived_from<Entity> T, typename... Args>
     T& CreateIntegrant(Args&&... args)
     {
-        const std::string typeName = typeid(T).name()
+        const std::string typeName = typeid(T).name();
         // return static_cast<T&>(*m_Entities.emplace_back(std::make_unique<T>(std::forward<Args>(args)...)));
     }
 
@@ -93,7 +93,7 @@ public:
 
 private:
     std::vector<std::unique_ptr<Entity>> m_Entities;
-    std::unordered_map<const std::string, std::shared_ptr<IIntegrantRegistry>> m_IntegrantRegistries;
+    std::unordered_map<const char*, std::shared_ptr<IIntegrantRegistry>> m_IntegrantRegistries;
 };
 
 class MoveableEntity : public Entity
