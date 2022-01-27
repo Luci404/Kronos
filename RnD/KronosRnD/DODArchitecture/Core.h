@@ -70,6 +70,7 @@ class IntegrantPool final : public IIntegrantPool
 {
 public:
 	IntegrantPool() 
+		: m_Size(0)
 	{
 	}
 
@@ -133,7 +134,7 @@ public:
 	{
 		const char* typeName = typeid(T).name();
 
-		KRONOS_CORE_ASSERT(m_IntegrantPools.contains(typeName), "Failed to register integrant: An integrant type with typename '%s' has already been registered.", typeName);
+		KRONOS_CORE_ASSERT(!m_IntegrantPools.contains(typeName), "Failed to register integrant: An integrant type with typename '%s' has already been registered.", typeName);
 
 		m_IntegrantPools.insert({ typeName, std::make_shared<IntegrantPool<T>>() });
 	}

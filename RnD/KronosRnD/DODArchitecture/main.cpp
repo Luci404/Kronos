@@ -54,6 +54,10 @@ public:
 	{
 		IntegrantRegistry::RegisterIntegrant<ExampleIntegrant>();
 	}
+
+	void Terminate() override
+	{
+	}
 };
 
 class ExampleSystem : public ISystem
@@ -84,6 +88,9 @@ private:
 
 int main(int argc, char* argv[])
 {
+	ExampleStaticModule exampleStaticModule = ExampleStaticModule();
+	exampleStaticModule.Initialize();
+
 	IntegrantHandle<ExampleIntegrant> exampleIntegrant = IntegrantRegistry::CreateIntegrant<ExampleIntegrant>(2);
 
 	std::cout << exampleIntegrant->ExampleData << '\n';
