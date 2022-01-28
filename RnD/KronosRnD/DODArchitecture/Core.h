@@ -24,18 +24,12 @@ public:
 	IntegrantHandle()
 		: m_Identifier(m_IncrementalIdentifier)
 	{
-		std::cout << "Constructor called " << std::endl;
 		m_IncrementalIdentifier++;
 	}
 
 	bool operator==(const IntegrantHandle&) const = default;
 
 	T* operator->() const noexcept;
-
-	static uint32_t GetCount()
-	{
-		return m_Count;
-	}
 
 private:
 	static uint32_t m_IncrementalIdentifier;
@@ -172,6 +166,6 @@ std::unordered_map<const char*, std::shared_ptr<IIntegrantPool>> IntegrantRegist
 template<std::derived_from<IIntegrant> T>
 inline T* IntegrantHandle<T>::operator->() const noexcept
 {
-	std::cout << "Index: " << m_Identifier << '\n';
+	//std::cout << "Index: " << m_Identifier << '\n';
 	return &IntegrantRegistry::GetIntegrant<T>(*this);
 }
