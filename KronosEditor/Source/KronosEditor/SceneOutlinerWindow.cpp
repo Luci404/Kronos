@@ -9,18 +9,18 @@ namespace KronosEditor
 	{
 		if (ImGui::Begin("Scene Outliner"))
 		{
-			if (m_Scene)
+			/*if (m_Scene)
 			{
 				for (const std::unique_ptr<Kronos::Entity>& entity : m_Scene->GetRegistry())
 				{
 					DrawEntity(*entity.get());
 				}
-			}
+			}*/
 		}
 		ImGui::End();
 	}
 
-	void SceneOutlinerWindow::SetScene(Kronos::Scene* scene)
+	/*void SceneOutlinerWindow::SetScene(Kronos::Scene* scene)
 	{
 		m_Scene = scene;
 	}
@@ -45,5 +45,5 @@ namespace KronosEditor
 		{
 			m_Scene->DestroyEntity(entity);
 		}
-	}
+	}*/
 };

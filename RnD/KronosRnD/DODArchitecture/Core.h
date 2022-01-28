@@ -134,6 +134,7 @@ public:
 	{
 		// TODO: Invalidate handles.
 		GetIntegrantPool<T>()->Remove(integrantHandle);
+
 	}
 
 	template<std::derived_from<IIntegrant> T>

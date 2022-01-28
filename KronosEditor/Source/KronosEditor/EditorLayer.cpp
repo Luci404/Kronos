@@ -2,9 +2,9 @@
 
 #include "KronosEditor/AssetBrowserWindow.h"
 #include "KronosEditor/SceneOutlinerWindow.h"
+#include "KronosEditor/ActionSearchWindow.h"
 
 #include "Kronos/Core/Log.h"
-#include "Kronos/Scene/Entity.h" // TMP
 
 #include <imgui.h>
 
@@ -16,11 +16,7 @@ namespace KronosEditor
     
         m_EditorWindows.push_back(new AssetBrowserWindow());
         SceneOutlinerWindow* sceneOutlinerWindow = static_cast<SceneOutlinerWindow*>(m_EditorWindows.emplace_back(new SceneOutlinerWindow()));
-        sceneOutlinerWindow->SetScene(&ActiveScene);
-
-        ActiveScene.CreateEntity<Kronos::Entity>("Entity01"); // TMP
-        ActiveScene.CreateEntity<Kronos::Entity>("Entity02"); // TMP
-        ActiveScene.CreateEntity<Kronos::Entity>("Entity03"); // TMP
+        ActionSearchWindow* actionSearchWindow = static_cast<ActionSearchWindow*>(m_EditorWindows.emplace_back(new ActionSearchWindow()));
     }
 
     void EditorLayer::OnDetach()

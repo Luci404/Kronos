@@ -2,7 +2,7 @@
 
 #include "KronosEditor/EditorWindow.h"
 
-#include "Kronos/Scene/Scene.h"
+// #include "Kronos/Scene/Scene.h"
 
 namespace KronosEditor
 {
@@ -10,12 +10,12 @@ namespace KronosEditor
 	{
 	public:
 		virtual void Render() override;
-		void SetScene(Kronos::Scene* scene);
+		// void SetScene(Kronos::Scene* scene);
 
 	private:
-		void DrawEntity(Kronos::Entity& entity);
+		// void DrawEntity(Kronos::Entity& entity);
 
 	private:
-		Kronos::Scene* m_Scene;
+		// Kronos::Scene* m_Scene;
 	};
 }

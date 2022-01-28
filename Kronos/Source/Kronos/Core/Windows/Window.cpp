@@ -67,7 +67,7 @@ namespace Kronos
 			style.IndentSpacing = 16;
 			style.ScrollbarSize = 12;
 			// Borders
-			style.WindowBorderSize = 0;
+			style.WindowBorderSize = 1;
 			style.PopupBorderSize = 0;
 			style.FrameBorderSize = 0;
 			style.TabBorderSize = 0;

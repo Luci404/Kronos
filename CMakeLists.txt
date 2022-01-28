@@ -26,8 +26,6 @@ include_directories(AFTER "${CMAKE_SOURCE_DIR}/Kronos/Source")
 add_library(Kronos STATIC "${KRONOS_HEADERS}" "${KRONOS_SOURCES}")
 set_property(TARGET Kronos PROPERTY CXX_STANDARD 20)
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES "${KRONOS_HEADERS}" "${KRONOS_SOURCES}")
-
 add_subdirectory("${CMAKE_SOURCE_DIR}/Kronos/Vendor/spdlog")
 target_link_libraries(Kronos spdlog_header_only)
 set_target_properties(spdlog PROPERTIES FOLDER "Dependencies/spdlog")
@@ -41,8 +39,11 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 target_link_libraries(Kronos glfw)
 set_target_properties(glfw PROPERTIES FOLDER "Dependencies/glfw")
 
-target_link_libraries(Kronos imgui)
+target_link_libraries(Kronos imgui) 
 set_target_properties(imgui PROPERTIES FOLDER "Dependencies/imgui")
+
+get_property(TARGET_SOURCE_FILES TARGET Kronos PROPERTY SOURCES)
+source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/Kronos/Source" FILES ${TARGET_SOURCE_FILES})
 
 # Kronos Editor
 project(KronosEditor)
@@ -52,3 +53,6 @@ include_directories(AFTER "${CMAKE_SOURCE_DIR}/KronosEditor/Source")
 add_executable(KronosEditor "${KRONOS_HEADERS}" "${KRONOS_SOURCES}")
 target_link_libraries(KronosEditor Kronos)
 set_property(TARGET KronosEditor PROPERTY CXX_STANDARD 20)
+
+get_property(TARGET_SOURCE_FILES TARGET KronosEditor PROPERTY SOURCES)
+source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/KronosEditor/Source" FILES ${TARGET_SOURCE_FILES})
