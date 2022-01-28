@@ -6,6 +6,7 @@
 #include <cassert>
 #include <utility>
 #include <concepts>
+#include <iostream>
 
 #define KRONOS_CORE_ASSERT(x, ...) assert((x))
 #define INTEGRANT_REGISTRY_SIZE 1024
@@ -93,21 +94,19 @@ public:
 
 	void Remove(IntegrantHandle<T> integrantHandle)
 	{
-		// TODO: Assert
-		size_t integrantIndex = m_IntegrantHandleToIndexMap[integrantHandle];
-
-		// Copy the integrant at end of the array to the deleted element's place to maintain memory density.
+		// Move the last integrant of the array into the place of hte removed integrant to keep the array memory packed.
 		size_t indexOfRemovedIntegrant = m_IntegrantHandleToIndexMap[integrantHandle];
 		size_t indexOfLastIntegrant = m_Size - 1;
 		m_IntegrantArray[indexOfRemovedIntegrant] = m_IntegrantArray[indexOfLastIntegrant];
 
-		// Update map to point to the new index of the moved integrant, and remove the deleted integrant's identifier.
+		// Update the mappings to accommodate for re-packing of the array.
 		IntegrantHandle<T> integrantHandleOfLastElement = m_IndexToIntegrantHandleMap[indexOfLastIntegrant];
 		m_IntegrantHandleToIndexMap[integrantHandleOfLastElement] = indexOfRemovedIntegrant;
 		m_IndexToIntegrantHandleMap[indexOfRemovedIntegrant] = integrantHandleOfLastElement;
 
-		m_IntegrantHandleToIndexMap.erase(integrantHandleOfLastElement);
-		m_IndexToIntegrantHandleMap.erase(indexOfRemovedIntegrant);
+		// Remove the mappings for the removed integrant.
+		m_IntegrantHandleToIndexMap.erase(integrantHandle);
+		m_IndexToIntegrantHandleMap.erase(indexOfLastIntegrant);
 
 		--m_Size;
 	}
@@ -182,5 +181,6 @@ std::unordered_map<const char*, std::shared_ptr<IIntegrantPool>> IntegrantRegist
 template<std::derived_from<IIntegrant> T>
 inline T* IntegrantHandle<T>::operator->() const noexcept
 {
+	std::cout << "Index: " << m_Identifier << '\n';
 	return &IntegrantRegistry::GetIntegrant<T>(*this);
 }
