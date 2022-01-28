@@ -20,49 +20,39 @@ public:
 	friend std::hash;
 
 public:
+	// The constructor should be private, IntegrantPool should be friend, only allowing construction only from inside of IntegrantPool.
 	IntegrantHandle()
+		: m_Identifier(m_IncrementalIdentifier)
 	{
-	}
-
-	virtual ~IntegrantHandle()
-	{
-		m_Count--;
+		std::cout << "Constructor called " << std::endl;
+		m_IncrementalIdentifier++;
 	}
 
 	bool operator==(const IntegrantHandle&) const = default;
 
-	static uint16_t GetCount()
+	T* operator->() const noexcept;
+
+	static uint32_t GetCount()
 	{
 		return m_Count;
 	}
 
-	T* operator->() const noexcept;
-
-public: // TODO: Make this private, and make IntegrantPool a friend of IntegrantHandle.
-	IntegrantHandle(uint16_t identifier)
-		: m_Identifier(identifier)
-	{
-		m_Count++;
-	}
-
 private:
-	static uint16_t m_Count;
-
-	uint16_t m_Identifier;
+	static uint32_t m_IncrementalIdentifier;
+	uint32_t m_Identifier;
 };
+
+template<std::derived_from<IIntegrant> T>
+uint32_t IntegrantHandle<T>::m_IncrementalIdentifier = 0;
 
 template<std::derived_from<IIntegrant> T>
 struct std::hash<IntegrantHandle<T>>
 {
 	std::size_t operator()(const IntegrantHandle<T>& integrantHandle) const
 	{
-		return std::hash<uint16_t>()(integrantHandle.m_Identifier);
+		return std::hash<uint32_t>()(integrantHandle.m_Identifier);
 	}
 };
-
-
-template<std::derived_from<IIntegrant> T>
-uint16_t IntegrantHandle<T>::m_Count = 0;
 
 // IntegrantPool
 class IIntegrantPool {};
@@ -83,7 +73,7 @@ public:
 		// Add the integrant to the integrant array, and integrant identifier array.
 		m_IntegrantArray[integrantIndex] = integrant;
 
-		IntegrantHandle<T> integrantHandle = IntegrantHandle<T>((uint16_t)m_Size);
+		IntegrantHandle<T> integrantHandle = IntegrantHandle<T>();
 		m_IntegrantHandleToIndexMap[integrantHandle] = integrantIndex;
 		m_IndexToIntegrantHandleMap[integrantIndex] = integrantHandle;
 
@@ -102,6 +92,7 @@ public:
 		// Update the mappings to accommodate for re-packing of the array.
 		IntegrantHandle<T> integrantHandleOfLastElement = m_IndexToIntegrantHandleMap[indexOfLastIntegrant];
 		m_IntegrantHandleToIndexMap[integrantHandleOfLastElement] = indexOfRemovedIntegrant;
+		// TODO: Fix this... The next line will construct a handle, increment m_IncrementalIdentifier, then override that newly created object with the assignment operator?
 		m_IndexToIntegrantHandleMap[indexOfRemovedIntegrant] = integrantHandleOfLastElement;
 
 		// Remove the mappings for the removed integrant.
