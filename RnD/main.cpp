@@ -100,10 +100,13 @@ public:
     {
         m_EntryLevel = Level::CreateLevelFromFile("level.lvl"); 
         LevelStreamingManager::LoadLevel(m_EntryLevel);
+
+        m_GameMode = 
     }
 
 private:
-    Level m_EntryLevel;
+    Ref<Level> m_EntryLevel;
+    Ref<GameMode> m_GameMode;
 };
 
 #pragma endregion
@@ -111,17 +114,52 @@ private:
 class SimulationLayer final : public Layer
 {
 public:
-    virtual void Initialize()
+    virtual void Initialize() override
     {
         m_ModuleStack.PushModule(new LevelStreamingModule());
         m_ModuleStack.PushModule(new GameplayFrameworkModule());
     }
+  
+    virtual void Terminate() override
+    {
+    }
 };
+
+#pragma region ExampleGameModule
+class ExampleGameGameInstance : public GameInstance
+{
+public:
+    ExampleGameGameInstance()
+    {
+        GameModeClass = ExampleGameGameMode.ClassStuff;
+        GameStateClass = ExampleGameGameState.ClassStuff;
+    }
+}
+
+class ExampleGameModule : StaticModule
+{
+public:
+    virtual void Initialize() override
+    {
+        ExampleGameGameInstance->StartGame();
+    }
+
+    virtual void Terminate() override
+    {
+        ExampleGameGameInstance->StopGame();
+    }
+
+private:
+    Ref<ExampleGameGameInstance> m_ExampleGameGameInstance; 
+};
+#pragma endregion
 
 class ApplicationLayer final : public Layer
 {
 public:
     virtual void Initialize()
     {
+        // TODO: This sould be a dynamic module.
+        m_ModuleStack.PushModule(new ExampleGameModule());
     }
 };
