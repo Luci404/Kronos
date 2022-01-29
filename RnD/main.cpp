@@ -78,7 +78,19 @@ public:
     virtual void Terminate() {}
 };
 
-class PlayerPawn {};
+class PlayerPawn 
+{
+public:
+    virtual void StartGame()
+    {
+        InputManager::BindKey(EInputKey::A, EInputKeyState::Pressed, this, &PlayerPawn::OnAPressed);
+    }
+private:
+    virtual void OnAPressed()
+    {
+
+    }
+};
 class PlayerController {};
 
 class GameMode
