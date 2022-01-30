@@ -1,1 +1,1 @@
-g++ Kronos/Source/Kronos/main.cpp -std=c++20 -I./Kronos/Source/
+g++ Kronos/Source/Kronos/main.cpp -std=c++20 -I./Kronos/Source/ -lgdi32
