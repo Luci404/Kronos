@@ -5,24 +5,28 @@
 #include <string>
 #include <iostream>
 
-class LoggingModule : public StaticModule
+namespace Kronos
 {
-public:
-    virtual void Initialize() override
+    class LoggingModule : public StaticModule
     {
-        std::cout.flush();
-    }
+    public:
+        virtual void Initialize() override
+        {
+            std::cout.flush();
+        }
 
-    virtual void Terminate() override {}
-};
+        virtual void Terminate() override {}
+    };
 
-class Log
-{
-public:
-    inline static void Trace(const std::string& message)
+    class Log
     {
-        std::cout << message << "\n";
-    }
-};
+    public:
+        inline static void Trace(const std::string &message)
+        {
+            std::cout << message << "\n";
+        }
+    };
+}
 
+// TODO: Remove references.
 #define KRONOS_CORE_TRACE(x) std::cout << x << "\n"

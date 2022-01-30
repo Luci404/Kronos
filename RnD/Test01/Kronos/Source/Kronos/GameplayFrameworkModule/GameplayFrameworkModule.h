@@ -6,52 +6,64 @@
 #include "Kronos/InputSystemModule/InputSystemModule.h"
 #include "Kronos/LevelStreamingModule/LevelStreamingModule.h"
 
-class GameplayFrameworkModule final : public StaticModule
+namespace Kronos
 {
-public:
-    virtual void Initialize() {}
-    virtual void Terminate() {}
-};
-
-class PlayerPawn 
-{
-public:
-    virtual void StartGame()
+    class GameplayFrameworkModule final : public StaticModule
     {
-        InputManager::BindKey(EInputKey::KEY_A, EInputKeyState::Pressed, this, &PlayerPawn::OnAPressed);
-    }
-private:
-    virtual void OnAPressed()
+    public:
+        virtual void Initialize() {}
+        virtual void Terminate() {}
+    };
+
+    class PlayerPawn
     {
-    }
-};
-class PlayerController {};
+    public:
+        virtual void StartGame()
+        {
+            InputManager::BindKey(EInputKey::KEY_A, EInputKeyState::Pressed, this, &PlayerPawn::OnAPressed);
+        }
 
-class GameMode
-{
-public:
-    virtual void StartGame() 
+    private:
+        virtual void OnAPressed()
+        {
+        }
+    };
+    class PlayerController
     {
-    }
-};
+    };
 
-class GameState {};
-class PlayerState {};
-class HUD {};
-
-class GameInstance
-{
-public:
-    virtual void BeginPlay()
+    class GameMode
     {
-        Log::Trace("Starting game...");
-        m_EntryLevel = Kronos::CreateRef<Level>(); 
-        LevelStreamingManager::LoadLevel(m_EntryLevel);
-    }
+    public:
+        virtual void StartGame()
+        {
+        }
+    };
 
-    virtual void Tick() {}
+    class GameState
+    {
+    };
+    class PlayerState
+    {
+    };
+    class HUD
+    {
+    };
 
-private:
-    Kronos::Ref<Level> m_EntryLevel;
-    Kronos::Ref<GameMode> m_GameMode;
-};
+    class GameInstance
+    {
+    public:
+        virtual void BeginPlay()
+        {
+            Log::Trace("Starting game...");
+            m_EntryLevel = Kronos::CreateRef<Level>();
+            LevelStreamingManager::LoadLevel(m_EntryLevel);
+        }
+
+        virtual void Tick() {}
+
+    private:
+        Kronos::Ref<Level> m_EntryLevel;
+        Kronos::Ref<GameMode> m_GameMode;
+    };
+}

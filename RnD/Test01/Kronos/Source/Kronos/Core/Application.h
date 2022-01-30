@@ -4,40 +4,43 @@
 
 #include "Kronos/LoggingModule/LoggingModule.h"
 
-class Application
+namespace Kronos
 {
-public:
-    Application()
-        : m_LayerStack()
+    class Application
     {
-    }
-
-    void Initialize()
-    {
-        Log::Trace("Initializing application...");
-
-        for (Layer *layer : m_LayerStack)
+    public:
+        Application()
+            : m_LayerStack()
         {
-            layer->Initialize();
         }
-    }
 
-    void Tick()
-    {
-        for (Layer *layer : m_LayerStack)
+        void Initialize()
         {
-            layer->Tick();
-        }
-    }
+            Log::Trace("Initializing application...");
 
-    void Terminate()
-    {
-        for (Layer *layer : m_LayerStack)
+            for (Layer *layer : m_LayerStack)
+            {
+                layer->Initialize();
+            }
+        }
+
+        void Tick()
         {
-            layer->Terminate();
+            for (Layer *layer : m_LayerStack)
+            {
+                layer->Tick();
+            }
         }
-    }
 
-public: // TODO: Private
-    LayerStack m_LayerStack;
-};
+        void Terminate()
+        {
+            for (Layer *layer : m_LayerStack)
+            {
+                layer->Terminate();
+            }
+        }
+
+    public: // TODO: Private
+        LayerStack m_LayerStack;
+    };
+}
