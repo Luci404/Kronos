@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Core/Module.h"
+#include "Kronos/Core/Module.h"
 
 #include <cstdint>
 #include <string>

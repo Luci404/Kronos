@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../Core/Memory.h"
-#include "../Core/Module.h"
+#include "Kronos/Core/Memory.h"
+#include "Kronos/Core/Module.h"
 
-#include "../InputSystemModule/InputSystemModule.h"
-#include "../LevelStreamingModule/LevelStreamingModule.h"
+#include "Kronos/InputSystemModule/InputSystemModule.h"
+#include "Kronos/LevelStreamingModule/LevelStreamingModule.h"
 
 class GameplayFrameworkModule final : public StaticModule
 {

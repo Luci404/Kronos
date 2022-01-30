@@ -1,6 +1,8 @@
 #pragma once
 
-#include "Layer.h"
+#include "Kronos/Core/Layer.h"
+
+#include "Kronos/LoggingModule/LoggingModule.h"
 
 class Application
 {
@@ -12,6 +14,8 @@ public:
 
     void Initialize()
     {
+        Log::Trace("Initializing application...");
+
         for (Layer *layer : m_LayerStack)
         {
             layer->Initialize();

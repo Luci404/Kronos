@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../Core/Memory.h"
-#include "../Core/Module.h"
+#include "Kronos/Core/Memory.h"
+#include "Kronos/Core/Module.h"
 
 class LevelStreamingModule final : public StaticModule {};
 
