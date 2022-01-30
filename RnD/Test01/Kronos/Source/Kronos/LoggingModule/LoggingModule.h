@@ -8,7 +8,10 @@
 class LoggingModule : public StaticModule
 {
 public:
-    virtual void Initialize() override {}
+    virtual void Initialize() override
+    {
+        std::cout.flush();
+    }
 
     virtual void Terminate() override {}
 };

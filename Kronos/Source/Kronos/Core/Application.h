@@ -10,13 +10,9 @@ namespace Kronos
 	class Application
 	{
 	public:
-		Application(const std::string& name = "Kronos Application")
-		{
-		}
+		Application(const std::string& name = "Kronos Application") {}
 
-		virtual ~Application()
-		{
-		}
+		virtual ~Application() {}
 
 		virtual void Initialize()
 		{

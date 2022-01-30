@@ -52,10 +52,11 @@ public:
 
     void Tick() override
     {
+        GameInstance::Tick();
         m_GameWindow->PollEvents(); 
     }
-private:
 
+private:
     Kronos::Ref<Kronos::Window> m_GameWindow;
 };
 
@@ -71,6 +72,7 @@ public:
 
     void Tick() override
     {
+        StaticModule::Tick();
         m_ExampleGameGameInstance->Tick();
     }
 
@@ -93,11 +95,8 @@ int main(int argc, char* argv[])
     Application application;
     application.m_LayerStack.PushLayer(new PlatformLayer());
     application.m_LayerStack.PushLayer(new CoreLayer());
-    std::cout << "test" << std::endl;
     application.m_LayerStack.PushLayer(new SimulationLayer());
-    std::cout << "test" << std::endl;
     application.m_LayerStack.PushLayer(new ApplicationLayer());
-    std::cout << "test" << std::endl;
 
     application.Initialize();
     while (true) { application.Tick(); }

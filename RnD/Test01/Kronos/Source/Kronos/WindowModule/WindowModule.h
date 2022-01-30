@@ -27,13 +27,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     case WM_CLOSE:
     {
-        Log::Trace("Close");
         DestroyWindow(hwnd);
         break;
     }
     case WM_DESTROY:
     {
-        Log::Trace("Destroy");
         PostQuitMessage(0);
         break;
     }
@@ -63,15 +61,16 @@ namespace Kronos
             wc.hInstance = GetModuleHandleW(NULL);
             wc.hCursor = LoadCursor(NULL, IDC_ARROW);
             wc.lpszClassName = KRONOS_WNDCLASSNAME;
+            wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
             KRONOS_CORE_ASSERT(RegisterClassExW(&wc), "Failed to register class.");
 
             DWORD style = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION | WS_MAXIMIZEBOX | WS_THICKFRAME;
             DWORD exStyle = WS_EX_APPWINDOW;
-            HWND hwnd = CreateWindowExW(exStyle, KRONOS_WNDCLASSNAME, L"untitled", style, 160, 90, 1600, 900, NULL, NULL, GetModuleHandleW(NULL), NULL);
-            KRONOS_CORE_ASSERT(hwnd != NULL, "Failed to create window.");
+            m_WindowHandle = CreateWindowExW(exStyle, KRONOS_WNDCLASSNAME, L"untitled", style, 160, 90, 1600, 900, NULL, NULL, GetModuleHandleW(NULL), NULL);
+            KRONOS_CORE_ASSERT(m_WindowHandle != NULL, "Failed to create window.");
 
-            ShowWindow(hwnd, SW_SHOWNORMAL);
-            UpdateWindow(hwnd);
+            ShowWindow(m_WindowHandle, SW_SHOWNORMAL);
+            UpdateWindow(m_WindowHandle);
         }
 
         void PollEvents()
@@ -84,6 +83,11 @@ namespace Kronos
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
             }
+        }
+
+         HWND GetHWND_TMP() const
+        {
+            return m_WindowHandle;
         }
 
         virtual ~Window()
@@ -101,6 +105,8 @@ namespace Kronos
         uint32_t m_YPosition;
         bool m_Maximized;
         bool m_VSync;
+
+        HWND m_WindowHandle;
     };
 
     class WindowModule : public StaticModule
