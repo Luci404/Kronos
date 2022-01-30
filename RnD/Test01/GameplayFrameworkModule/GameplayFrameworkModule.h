@@ -45,6 +45,8 @@ class GameInstance
 public:
     virtual void StartGame()
     {
+        Log::Trace("Starting game...");
+
         m_EntryLevel = Kronos::CreateRef<Level>(); 
         LevelStreamingManager::LoadLevel(m_EntryLevel);
     }

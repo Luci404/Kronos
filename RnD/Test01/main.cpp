@@ -2,6 +2,7 @@
 #include "Core/Layer.h"
 #include "Core/Application.h"
 
+#include "LoggingModule/LoggingModule.h"
 #include "InputSystemModule/InputSystemModule.h"
 #include "LevelStreamingModule/LevelStreamingModule.h"
 #include "GameplayFrameworkModule/GameplayFrameworkModule.h"
@@ -9,8 +10,10 @@
 class PlatformLayer final : public Layer
 {
 public:
-    virtual void Initialize() override
+    PlatformLayer()
     {
+        m_ModuleStack.PushModule(new LoggingModule());
+        Log::Trace("Initializing platform layer...");
         m_ModuleStack.PushModule(new InputSystemModule());
     }
 };
@@ -18,8 +21,9 @@ public:
 class SimulationLayer final : public Layer
 {
 public:
-    virtual void Initialize() override
+    SimulationLayer()
     {
+        Log::Trace("Initializing simulation layer...");
         m_ModuleStack.PushModule(new LevelStreamingModule());
         m_ModuleStack.PushModule(new GameplayFrameworkModule());
     }
@@ -38,14 +42,11 @@ public:
 class ExampleGameModule : public StaticModule
 {
 public:
-    virtual void Initialize() override
+    ExampleGameModule() 
     {
+        Log::Trace("Initializing game module...");
+        m_ExampleGameGameInstance = Kronos::CreateRef<ExampleGameGameInstance>();
         m_ExampleGameGameInstance->StartGame();
-    }
-
-    virtual void Terminate() override
-    {
-        //m_ExampleGameGameInstance->StopGame();
     }
 
 private:
@@ -55,10 +56,10 @@ private:
 class ApplicationLayer final : public Layer
 {
 public:
-    virtual void Initialize()
+    ApplicationLayer()
     {
-        // TODO: This sould be a dynamic module.
-        m_ModuleStack.PushModule(new ExampleGameModule());
+        Log::Trace("Initializing application layer...");
+        m_ModuleStack.PushModule(new ExampleGameModule()); // TODO: This sould be a dynamic module.
     }
 };
 
