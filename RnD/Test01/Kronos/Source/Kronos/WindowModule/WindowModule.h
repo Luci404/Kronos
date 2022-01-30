@@ -52,7 +52,7 @@ namespace Kronos
     class Window
     {
     public:
-        Window(const std::string& title = "untitled", uint32_t width = 1600, uint32_t height = 900, uint32_t xPosition = 0, uint32_t yPosition = 0, bool maximized = false, bool vSync = true)
+        Window(const std::string &title = "untitled", uint32_t width = 1600, uint32_t height = 900, uint32_t xPosition = 0, uint32_t yPosition = 0, bool maximized = false, bool vSync = true)
         {
             Log::Trace("Creating window...");
 
@@ -72,12 +72,17 @@ namespace Kronos
 
             ShowWindow(hwnd, SW_SHOWNORMAL);
             UpdateWindow(hwnd);
+        }
 
-            MSG Msg;
-            while (GetMessage(&Msg, NULL, 0, 0) > 0)
+        void PollEvents()
+        {
+            MSG msg;
+            HWND handle;
+
+            while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
             {
-                TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
             }
         }
 

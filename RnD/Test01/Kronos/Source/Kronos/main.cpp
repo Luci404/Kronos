@@ -47,10 +47,12 @@ class ExampleGameGameInstance : public GameInstance
 public:
     ExampleGameGameInstance()
     {
-        //GameModeClass = ExampleGameGameMode.ClassStuff;
-        //GameStateClass = ExampleGameGameState.ClassStuff;
-
         m_GameWindow = Kronos::CreateRef<Kronos::Window>();
+    }
+
+    void Tick() override
+    {
+        m_GameWindow->PollEvents(); 
     }
 private:
 
@@ -65,6 +67,11 @@ public:
         Log::Trace("Initializing game module...");
         m_ExampleGameGameInstance = Kronos::CreateRef<ExampleGameGameInstance>();
         m_ExampleGameGameInstance->BeginPlay();
+    }
+
+    void Tick() override
+    {
+        m_ExampleGameGameInstance->Tick();
     }
 
 private:
