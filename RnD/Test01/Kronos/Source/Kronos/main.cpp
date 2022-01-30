@@ -1,12 +1,12 @@
-#include "Core/Memory.h"
-#include "Core/Layer.h"
-#include "Core/Application.h"
+#include "Kronos/Core/Memory.h"
+#include "Kronos/Core/Layer.h"
+#include "Kronos/Core/Application.h"
 
-#include "LoggingModule/LoggingModule.h"
-#include "InputSystemModule/InputSystemModule.h"
-#include "IntegrantModule/IntegrantModule.h"
-#include "LevelStreamingModule/LevelStreamingModule.h"
-#include "GameplayFrameworkModule/GameplayFrameworkModule.h"
+#include "Kronos/LoggingModule/LoggingModule.h"
+#include "Kronos/InputSystemModule/InputSystemModule.h"
+#include "Kronos/IntegrantModule/IntegrantModule.h"
+#include "Kronos/LevelStreamingModule/LevelStreamingModule.h"
+#include "Kronos/GameplayFrameworkModule/GameplayFrameworkModule.h"
 
 class PlatformLayer final : public Layer
 {
