@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Kronos/Core/Module.h"
+#include "Kronos/Core/Assert.h"
 #include "Kronos/LoggingModule/LoggingModule.h"
 
 #include <windows.h>
@@ -49,20 +50,12 @@ namespace Kronos
             wc.hInstance = GetModuleHandleW(NULL);
             wc.hCursor = LoadCursor(NULL, IDC_ARROW);
             wc.lpszClassName = KRONOS_WNDCLASSNAME;
-
-            if(!RegisterClassExW(&wc))
-            {
-                std::cout << "ERROR: Failed to register class.\n";
-            }
+            KRONOS_CORE_ASSERT(RegisterClassExW(&wc),  "Failed to register class.");
 
             DWORD style = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION | WS_MAXIMIZEBOX | WS_THICKFRAME;
             DWORD exStyle = WS_EX_APPWINDOW;
-            HWND hwnd = CreateWindowExW(exStyle, KRONOS_WNDCLASSNAME, L"untitled", style, 800, 450, 1600, 900, NULL, NULL, GetModuleHandleW(NULL), NULL);
-        
-            if(hwnd == NULL)
-            {
-                std::cout << "ERROR: hwnd was null.\n";
-            }
+            HWND hwnd = CreateWindowExW(exStyle, KRONOS_WNDCLASSNAME, L"untitled", style, 160, 90, 1600, 900, NULL, NULL, GetModuleHandleW(NULL), NULL);
+            KRONOS_CORE_ASSERT(hwnd != NULL,  "Failed to create window.");
 
             ShowWindow(hwnd, SW_SHOWNORMAL);
             UpdateWindow(hwnd);

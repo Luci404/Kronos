@@ -1,17 +1,17 @@
 #pragma once
 
+
 #include "Kronos/Core/Module.h"
+#include "Kronos/Core/Assert.h"
 
 #include <unordered_map>
 #include <memory>
 #include <array>
-#include <cassert>
 #include <utility>
 #include <concepts>
 #include <iostream>
 #include <functional>
 
-#define KRONOS_CORE_ASSERT(x, ...) assert((x))
 #define INTEGRANT_REGISTRY_SIZE 1024
 
 class IntegrantModule : public StaticModule {};
