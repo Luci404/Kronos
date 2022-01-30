@@ -4,6 +4,7 @@
 
 #include "LoggingModule/LoggingModule.h"
 #include "InputSystemModule/InputSystemModule.h"
+#include "IntegrantModule/IntegrantModule.h"
 #include "LevelStreamingModule/LevelStreamingModule.h"
 #include "GameplayFrameworkModule/GameplayFrameworkModule.h"
 
@@ -15,6 +16,16 @@ public:
         m_ModuleStack.PushModule(new LoggingModule());
         Log::Trace("Initializing platform layer...");
         m_ModuleStack.PushModule(new InputSystemModule());
+    }
+};
+
+class CoreLayer final : public Layer
+{
+public:
+    CoreLayer()
+    {
+        Log::Trace("Initializing core layer...");
+        m_ModuleStack.PushModule(new IntegrantModule());
     }
 };
 
@@ -46,7 +57,7 @@ public:
     {
         Log::Trace("Initializing game module...");
         m_ExampleGameGameInstance = Kronos::CreateRef<ExampleGameGameInstance>();
-        m_ExampleGameGameInstance->StartGame();
+        m_ExampleGameGameInstance->BeginPlay();
     }
 
 private:
@@ -66,6 +77,8 @@ public:
 int main(int argc, char* argv[])
 {
     Application application;
+    application.m_LayerStack.PushLayer(new PlatformLayer());
+    application.m_LayerStack.PushLayer(new CoreLayer());
     application.m_LayerStack.PushLayer(new SimulationLayer());
     application.m_LayerStack.PushLayer(new ApplicationLayer());
 
