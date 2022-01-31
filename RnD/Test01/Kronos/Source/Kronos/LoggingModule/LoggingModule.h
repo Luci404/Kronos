@@ -27,6 +27,3 @@ namespace Kronos
         }
     };
 }
-
-// TODO: Remove references.
-#define KRONOS_CORE_TRACE(x) std::cout << x << "\n"

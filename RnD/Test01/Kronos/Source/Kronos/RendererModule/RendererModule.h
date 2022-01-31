@@ -1,11 +1,11 @@
 #pragma once
 
+#include "Kronos/WindowModule/WindowModule.h"
 #include "Kronos/Core/Module.h"
 
 namespace Kronos
 {
-    class ImGuiRenderer {};
-    class SceneRenderer {};
+    namespace RHI {}
 
     class RendererModule : public StaticModule {};
 }

@@ -7,6 +7,7 @@
 #include "Kronos/InputSystemModule/InputSystemModule.h"
 #include "Kronos/IntegrantModule/IntegrantModule.h"
 #include "Kronos/LevelStreamingModule/LevelStreamingModule.h"
+#include "Kronos/RendererModule/RendererModule.h"
 #include "Kronos/GameplayFrameworkModule/GameplayFrameworkModule.h"
 
 namespace Kronos
@@ -40,6 +41,7 @@ namespace Kronos
         {
             Log::Trace("Initializing simulation layer...");
             m_ModuleStack.PushModule(new LevelStreamingModule());
+            m_ModuleStack.PushModule(new RendererModule());
             m_ModuleStack.PushModule(new GameplayFrameworkModule());
         }
     };
