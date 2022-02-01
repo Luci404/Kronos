@@ -12,37 +12,13 @@
 
 namespace Kronos
 {
-    void PaintWindow(HWND hwnd)
-    {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
-        Rectangle(hdc, 5, 5, 100, 100);
-        EndPaint(hwnd, &ps);
-    }
-
     LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         switch (msg)
         {
-        case WM_PAINT:
-        {
-            PaintWindow(hwnd);
-            break;
-        }
-        case WM_CLOSE:
-        {
-            DestroyWindow(hwnd);
-            break;
-        }
-        case WM_DESTROY:
-        {
-            PostQuitMessage(0);
-            break;
-        }
-        default:
-        {
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-        }
+        case WM_CLOSE: { DestroyWindow(hwnd); break; }
+        case WM_DESTROY: { PostQuitMessage(0); break; }
+        default: return DefWindowProc(hwnd, msg, wParam, lParam);
         }
         return 0;
     }
