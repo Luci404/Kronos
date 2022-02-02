@@ -17,12 +17,15 @@ add_library(Kronos STATIC "${KRONOS_HEADERS}" "${KRONOS_SOURCES}")
 set_property(TARGET Kronos PROPERTY CXX_STANDARD 20)
 include_directories(AFTER "${CMAKE_SOURCE_DIR}/Kronos/Source")
 
+target_link_libraries(Kronos PUBLIC "opengl32.lib")
+target_link_libraries(Kronos PUBLIC "glu32.lib")
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-target_link_libraries(Kronos glfw)
+target_link_libraries(Kronos PUBLIC glfw)
 
-target_link_libraries(Kronos glad)
+target_link_libraries(Kronos PUBLIC glad)
 set_target_properties(glad PROPERTIES FOLDER "Dependencies/glad")
 
 get_property(TARGET_SOURCE_FILES TARGET Kronos PROPERTY SOURCES)

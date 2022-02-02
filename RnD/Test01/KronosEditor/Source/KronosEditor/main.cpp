@@ -58,6 +58,7 @@ namespace KronosEditor
         {
             Kronos::GameInstance::Tick();
             m_GameWindow->PollEvents();
+            m_GameWindow->Render();
         }
 
     private:

@@ -4,7 +4,10 @@
 #include "Kronos/Core/Assert.h"
 #include "Kronos/LoggingModule/LoggingModule.h"
 
+#include <glad/glad.h>
+
 #include <windows.h>
+#include <gl/GL.h>
 #include <d2d1.h>
 #include <stdio.h>
 
@@ -12,13 +15,62 @@
 
 namespace Kronos
 {
-    LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+
+    HDC ourWindowHandleToDeviceContext;
+    HGLRC ourOpenGLRenderingContext;
+
+    LRESULT CALLBACK WndProc(HWND windowHandle, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         switch (msg)
         {
-        case WM_CLOSE: { DestroyWindow(hwnd); break; }
+        case WM_CREATE:
+        {
+            PIXELFORMATDESCRIPTOR pixelFormatDescriptor =
+            {
+                sizeof(PIXELFORMATDESCRIPTOR),
+                1,
+                PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,    //Flags
+                PFD_TYPE_RGBA,        // The kind of framebuffer. RGBA or palette.
+                32,                   // Colordepth of the framebuffer.
+                0, 0, 0, 0, 0, 0,
+                0,
+                0,
+                0,
+                0, 0, 0, 0,
+                24,                   // Number of bits for the depthbuffer
+                8,                    // Number of bits for the stencilbuffer
+                0,                    // Number of Aux buffers in the framebuffer.
+                PFD_MAIN_PLANE,
+                0,
+                0, 0, 0
+            };
+
+            // Create, and make context current.
+            ourWindowHandleToDeviceContext = GetDC(windowHandle);
+
+            int letWindowsChooseThisPixelFormat = ChoosePixelFormat(ourWindowHandleToDeviceContext, &pixelFormatDescriptor);
+            SetPixelFormat(ourWindowHandleToDeviceContext, letWindowsChooseThisPixelFormat, &pixelFormatDescriptor);
+
+            ourOpenGLRenderingContext = wglCreateContext(ourWindowHandleToDeviceContext);
+            wglMakeCurrent(ourWindowHandleToDeviceContext, ourOpenGLRenderingContext);
+            
+            // Initialize glad
+            KRONOS_CORE_ASSERT(gladLoadGL(), "Failed to initialize OpenGL context.");
+
+            glViewport(0, 0, 800, 600);
+        }
+        break;
+        case WM_CLOSE:
+        {
+            wglMakeCurrent(ourWindowHandleToDeviceContext, NULL);
+            wglDeleteContext(ourOpenGLRenderingContext);
+            PostQuitMessage(0);
+
+            DestroyWindow(windowHandle);
+            break;
+        }
         case WM_DESTROY: { PostQuitMessage(0); break; }
-        default: return DefWindowProc(hwnd, msg, wParam, lParam);
+        default: return DefWindowProc(windowHandle, msg, wParam, lParam);
         }
         return 0;
     }
@@ -59,6 +111,15 @@ namespace Kronos
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
             }
+        }
+
+        void Render()
+        {
+            HDC deviceContext = GetDC(m_WindowHandle);
+            SwapBuffers(deviceContext);
+
+            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
         }
 
         HWND GetHWND_TMP() const
