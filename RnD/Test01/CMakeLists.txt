@@ -28,6 +28,9 @@ target_link_libraries(Kronos PUBLIC glfw)
 target_link_libraries(Kronos PUBLIC glad)
 set_target_properties(glad PROPERTIES FOLDER "Dependencies/glad")
 
+add_subdirectory("Kronos/Vendor/glm")
+include_directories("${CMAKE_SOURCE_DIR}/Kronos/Vendor/glm")   
+
 get_property(TARGET_SOURCE_FILES TARGET Kronos PROPERTY SOURCES)
 source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/Kronos/Source" FILES ${TARGET_SOURCE_FILES})
 

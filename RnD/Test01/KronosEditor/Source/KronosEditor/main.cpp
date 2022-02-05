@@ -52,7 +52,7 @@ namespace KronosEditor
         ExampleGameGameInstance()
         {
             m_GameWindow = Kronos::CreateRef<Kronos::Window>();
-            m_Renderer = Kronos::CreateRef<Kronos::Renderer>(m_GameWindow);
+            m_SceneRenderer = Kronos::CreateRef<Kronos::SceneRenderer>(m_GameWindow);
         }
 
         void Tick() override
@@ -60,12 +60,12 @@ namespace KronosEditor
             Kronos::GameInstance::Tick();
             m_GameWindow->PollEvents();
 
-            m_Renderer->Render();
+            m_SceneRenderer->Render();
         }
 
     private:
         Kronos::Ref<Kronos::Window> m_GameWindow;
-        Kronos::Ref<Kronos::Renderer> m_Renderer;
+        Kronos::Ref<Kronos::SceneRenderer> m_SceneRenderer;
     };
 
     class ExampleGameModule : public Kronos::StaticModule

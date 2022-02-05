@@ -1,13 +1,38 @@
 #pragma once
 
 #include "Kronos/WindowModule/WindowModule.h"
+#include "Kronos/IntegrantModule/IntegrantModule.h"
 #include "Kronos/Core/Module.h"
 #include "Kronos/Core/Memory.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+namespace Lada
+{
+    namespace RHI
+    {
+        class Surface {};
+        class Device {};
+        class CommandList {};
+        class GraphicsPipeline {};
+        class ComputePipeline {};
+    }
+
+    class Mesh {};
+    class Texture {};
+    class Material {};
+    class RendererCore {};
+    class ForwardRenderer : public RendererCore {};
+    class DeferredRenderer : public RendererCore {};
+    
+    class RenderGraph {};
+    class RenderGraphNode {};
+}
+
 namespace Kronos
 {
-    namespace RHI {}
-
     const unsigned int SCR_WIDTH = 800;
     const unsigned int SCR_HEIGHT = 600;
 
@@ -24,16 +49,16 @@ namespace Kronos
         "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
         "}\n\0";
 
-    unsigned int VBO, VAO;
-    unsigned int shaderProgram;
-
-    HDC ourWindowHandleToDeviceContext;
-    HGLRC ourOpenGLRenderingContext;
-
-    class Renderer
+    class StaticMeshIntegrant : public IIntegrant
     {
     public:
-        Renderer(Ref<Window> window)
+        glm::mat4 TransformMatrix;
+    };
+
+    class SceneRenderer /* : public Lada::RenderGraph */
+    {
+    public:
+        SceneRenderer(Ref<Window> window) 
             : m_Window(window)
         {
             PIXELFORMATDESCRIPTOR pixelFormatDescriptor =
@@ -69,9 +94,9 @@ namespace Kronos
             KRONOS_CORE_ASSERT(gladLoadGL(), "Failed to initialize OpenGL context.");
 
             // TODO: MOVE
-             // build and compile our shader program
-    // ------------------------------------
-    // vertex shader
+            // build and compile our shader program
+            // ------------------------------------
+            // vertex shader
             unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
             glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
             glCompileShader(vertexShader);
@@ -136,7 +161,7 @@ namespace Kronos
             glBindVertexArray(0);
         }
 
-        ~Renderer()
+        ~SceneRenderer()
         {
             wglMakeCurrent(ourWindowHandleToDeviceContext, NULL);
             wglDeleteContext(ourOpenGLRenderingContext);
@@ -154,15 +179,21 @@ namespace Kronos
 
             SwapBuffers(m_Window->GetDeviceContext_TMP());
         }
-
-
+    
+    private:
         void OnWindowResize(uint32_t newWidth, uint32_t newHeight)
         {
             glViewport(0, 0, newWidth, newHeight);
         }
 
+    private:
         Ref<Window> m_Window;
-    };
+
+        unsigned int VBO, VAO;
+        unsigned int shaderProgram;
+        HDC ourWindowHandleToDeviceContext;
+        HGLRC ourOpenGLRenderingContext;
+};
 
     class RendererModule : public StaticModule {};
 }
