@@ -52,17 +52,20 @@ namespace KronosEditor
         ExampleGameGameInstance()
         {
             m_GameWindow = Kronos::CreateRef<Kronos::Window>();
+            m_Renderer = Kronos::CreateRef<Kronos::Renderer>(m_GameWindow);
         }
 
         void Tick() override
         {
             Kronos::GameInstance::Tick();
             m_GameWindow->PollEvents();
-            m_GameWindow->Render();
+
+            m_Renderer->Render();
         }
 
     private:
         Kronos::Ref<Kronos::Window> m_GameWindow;
+        Kronos::Ref<Kronos::Renderer> m_Renderer;
     };
 
     class ExampleGameModule : public Kronos::StaticModule
@@ -111,3 +114,17 @@ int main(int argc, char* argv[])
     }
     application.Terminate();
 }
+
+// To ask
+// Should surface creation be a resposibility of the renderer or the window class.
+// The renderer would need to call low-level platform specific stuff...
+// Where should I draw the line?..
+
+// High priority
+// TODO: Renderer module api blockout
+
+// Medium priority
+// TODO: Hot-reloading (DynamicModule).
+
+// Low priority
+// TODO: Graph tool for visualization of module dependencies and nodes graphs (shader builders etc.), this tool could, and properly should, be build on ImGui.
