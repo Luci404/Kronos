@@ -69,7 +69,7 @@ namespace Kronos
     class SceneRenderer /* : public Lada::RenderGraph */
     {
     public:
-        SceneRenderer(Ref<Window> window) 
+        SceneRenderer(Ref<Window> window)
             : m_Window(window)
         {
             PIXELFORMATDESCRIPTOR pixelFormatDescriptor =
@@ -227,6 +227,16 @@ namespace Kronos
             glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            m_StaticMeshes[0] = StaticMeshIntegrant();
+            m_StaticMeshes[1] = StaticMeshIntegrant();
+            m_StaticMeshes[2] = StaticMeshIntegrant();
+            m_StaticMeshes[3] = StaticMeshIntegrant();
+
+            m_StaticMeshes[0].TransformMatrix = glm::translate(m_StaticMeshes[0].TransformMatrix, glm::vec3(-0.75f, 0.75f, 0.0f));
+            m_StaticMeshes[1].TransformMatrix = glm::translate(m_StaticMeshes[1].TransformMatrix, glm::vec3(0.75f, 0.75f, 0.0f));
+            m_StaticMeshes[2].TransformMatrix = glm::translate(m_StaticMeshes[2].TransformMatrix, glm::vec3(-0.75f, -0.75f, 0.0f));
+            m_StaticMeshes[3].TransformMatrix = glm::translate(m_StaticMeshes[3].TransformMatrix, glm::vec3(0.75f, -0.75f, 0.0f));
         }
 
         ~SceneRenderer()
@@ -240,17 +250,21 @@ namespace Kronos
             glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
             // set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
             glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
             glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
             glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-            glBindVertexArray(cubeVAO);
-            glUseProgram(shaderProgram);
-            glm::mat4 model = glm::mat4(1.0f);
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &model[0][0]);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+            for (const StaticMeshIntegrant staticMesh : m_StaticMeshes)
+            {
+                glBindVertexArray(cubeVAO);
+                glUseProgram(shaderProgram);
+                glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &staticMesh.TransformMatrix[0][0]);
+                glDrawArrays(GL_TRIANGLES, 0, 36);
+            }
+
 
             SwapBuffers(m_Window->GetDeviceContext_TMP());
         }
@@ -263,6 +277,8 @@ namespace Kronos
 
     private:
         Ref<Window> m_Window;
+
+        StaticMeshIntegrant m_StaticMeshes[4];
 
         unsigned int uboMatrices;
         unsigned int cubeVBO, cubeVAO;
