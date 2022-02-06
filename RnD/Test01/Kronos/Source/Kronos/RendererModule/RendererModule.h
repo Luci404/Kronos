@@ -38,19 +38,30 @@ namespace Kronos
 
     const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec3 aPos;\n"
+        "layout(std140) uniform Matrices\n"
+        "{\n"
+        "   mat4 projection; \n"
+        "   mat4 view; \n"
+        "}; \n"
+        "uniform mat4 model;\n"
         "void main()\n"
         "{\n"
-        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
         "}\0";
     const char* fragmentShaderSource = "#version 330 core\n"
         "out vec4 FragColor;\n"
         "void main()\n"
         "{\n"
-        "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "   FragColor = vec4(1.0f, 0.32f, 0.32f, 1.0f);\n"
         "}\n\0";
 
     class StaticMeshIntegrant : public IIntegrant
     {
+    public:
+        StaticMeshIntegrant()
+            : TransformMatrix(glm::mat4(1.0f))
+        {
+        }
     public:
         glm::mat4 TransformMatrix;
     };
@@ -93,7 +104,8 @@ namespace Kronos
             // Initialize glad
             KRONOS_CORE_ASSERT(gladLoadGL(), "Failed to initialize OpenGL context.");
 
-            // TODO: MOVE
+            glEnable(GL_DEPTH_TEST);
+
             // build and compile our shader program
             // ------------------------------------
             // vertex shader
@@ -136,29 +148,85 @@ namespace Kronos
 
             // set up vertex data (and buffer(s)) and configure vertex attributes
             // ------------------------------------------------------------------
-            float vertices[] = {
-                -0.5f, -0.5f, 0.0f, // left  
-                 0.5f, -0.5f, 0.0f, // right 
-                 0.0f,  0.5f, 0.0f  // top   
+            float cubeVertices[] = {
+                // positions         
+                -0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f,  0.5f, -0.5f,
+                 0.5f,  0.5f, -0.5f,
+                -0.5f,  0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+
+                -0.5f, -0.5f,  0.5f,
+                 0.5f, -0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                -0.5f,  0.5f,  0.5f,
+                -0.5f, -0.5f,  0.5f,
+
+                -0.5f,  0.5f,  0.5f,
+                -0.5f,  0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f, -0.5f,
+                -0.5f, -0.5f,  0.5f,
+                -0.5f,  0.5f,  0.5f,
+
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+
+                -0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f, -0.5f,
+                 0.5f, -0.5f,  0.5f,
+                 0.5f, -0.5f,  0.5f,
+                -0.5f, -0.5f,  0.5f,
+                -0.5f, -0.5f, -0.5f,
+
+                -0.5f,  0.5f, -0.5f,
+                 0.5f,  0.5f, -0.5f,
+                 0.5f,  0.5f,  0.5f,
+                 0.5f,  0.5f,  0.5f,
+                -0.5f,  0.5f,  0.5f,
+                -0.5f,  0.5f, -0.5f,
             };
-
-            glGenVertexArrays(1, &VAO);
-            glGenBuffers(1, &VBO);
-            // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-            glBindVertexArray(VAO);
-
-            glBindBuffer(GL_ARRAY_BUFFER, VBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+            // cube VAO
+            glGenVertexArrays(1, &cubeVAO);
+            glGenBuffers(1, &cubeVBO);
+            glBindVertexArray(cubeVAO);
+            glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
             glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
             // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
             glBindBuffer(GL_ARRAY_BUFFER, 0);
-
             // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
             // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
             glBindVertexArray(0);
+
+
+            // configure a uniform buffer object
+            // ---------------------------------
+            // first. We get the relevant block indices
+            unsigned int uniformBlockIndexRed = glGetUniformBlockIndex(shaderProgram, "Matrices");
+            // then we link each shader's uniform block to this uniform binding point
+            glUniformBlockBinding(shaderProgram, uniformBlockIndexRed, 0);
+            // Now actually create the buffer
+            glGenBuffers(1, &uboMatrices);
+            glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+            glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            // define the range of the buffer that links to a uniform binding point
+            glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
+
+            // store the projection matrix (we only do this once now) (note: we're not using zoom anymore by changing the FoV)
+            glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+            glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
         }
 
         ~SceneRenderer()
@@ -169,13 +237,20 @@ namespace Kronos
 
         void Render()
         {
-            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // draw our first triangle
+            // set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
+            glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+            glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+            glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+            glBindVertexArray(cubeVAO);
             glUseProgram(shaderProgram);
-            glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glm::mat4 model = glm::mat4(1.0f);
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &model[0][0]);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
 
             SwapBuffers(m_Window->GetDeviceContext_TMP());
         }
@@ -189,7 +264,8 @@ namespace Kronos
     private:
         Ref<Window> m_Window;
 
-        unsigned int VBO, VAO;
+        unsigned int uboMatrices;
+        unsigned int cubeVBO, cubeVAO;
         unsigned int shaderProgram;
         HDC ourWindowHandleToDeviceContext;
         HGLRC ourOpenGLRenderingContext;
