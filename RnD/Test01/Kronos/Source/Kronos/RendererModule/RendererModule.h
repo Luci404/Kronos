@@ -6,6 +6,7 @@
 #include "Kronos/Core/Memory.h"
 #include "Kronos/Core/Assert.h"
 
+#define VK_USE_PLATFORM_WIN32_KHR
 #include <vulkan/vulkan.h>
 
 #include <glm/glm.hpp>
@@ -297,7 +298,12 @@ namespace Kronos
             applicationInfo.pEngineName = "Kronos Engine";
             applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
             applicationInfo.apiVersion = VK_API_VERSION_1_0;
-        
+
+            const std::vector<const char*> enabledExtensionNames = {
+                "VK_KHR_surface",
+                "VK_KHR_win32_surface"
+            };
+
             VkInstanceCreateInfo instanceCreateInfo{};
             instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
             instanceCreateInfo.pNext = nullptr;
@@ -305,8 +311,8 @@ namespace Kronos
             instanceCreateInfo.pApplicationInfo = &applicationInfo;
             instanceCreateInfo.enabledLayerCount = 0;
             instanceCreateInfo.ppEnabledLayerNames = nullptr;
-            instanceCreateInfo.enabledExtensionCount = 0;
-            instanceCreateInfo.ppEnabledExtensionNames = nullptr;
+            instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensionNames.size());
+            instanceCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
 
             KRONOS_CORE_ASSERT(vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance) == VK_SUCCESS, "Failed to create instance!");
 
@@ -330,6 +336,13 @@ namespace Kronos
             m_GraphicsQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_GRAPHICS_BIT);
             m_ComputeQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_COMPUTE_BIT);
             m_TransferQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_TRANSFER_BIT);
+
+            // Create window surface
+            VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+            surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+            surfaceCreateInfo.hwnd = m_Window->GetHWND_TMP();
+            surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+            KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(m_Instance, &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
 
             // Create logical device.
             const float defaultQueuePriority(0.0f);
@@ -399,6 +412,7 @@ namespace Kronos
 
         VkInstance m_Instance;
         VkPhysicalDevice m_PhysicalDevice;
+        VkSurfaceKHR m_Surface;
         VkDevice m_LogicalDevice;
 
         uint32_t m_GraphicsQueueFamilyIndex;
