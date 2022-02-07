@@ -327,13 +327,9 @@ namespace Kronos
             std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
             vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, queueFamilyProperties.data());
 
-            for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
-            {
-                if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) m_GraphicsQueueFamilyIndex = i;
-                if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) m_GraphicsQueueFamilyIndex = i;
-                if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) m_GraphicsQueueFamilyIndex = i;
-            }
-
+            m_GraphicsQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_GRAPHICS_BIT);
+            m_ComputeQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_COMPUTE_BIT);
+            m_TransferQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_TRANSFER_BIT);
 
             // Create logical device.
             VkDeviceCreateInfo deviceCreateInfo{};
@@ -349,13 +345,54 @@ namespace Kronos
 
             KRONOS_CORE_ASSERT(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice) == VK_SUCCESS, "Failed to create logical device!");
         }
+
+        uint32_t inline FindQueueFamilyIndex(const std::vector<VkQueueFamilyProperties>& queueFamilyProperties, VkQueueFlagBits queueFlags) const
+        {
+            // Try to find a queue family index that supports compute but not graphics
+            if (queueFlags & VK_QUEUE_COMPUTE_BIT)
+            {
+                for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
+                {
+                    if ((queueFamilyProperties[i].queueFlags & queueFlags) && ((queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0))
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            // Dedicated queue for transfer
+            // Try to find a queue family index that supports transfer but not graphics and compute
+            if (queueFlags & VK_QUEUE_TRANSFER_BIT)
+            {
+                for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
+                {
+                    if ((queueFamilyProperties[i].queueFlags & queueFlags) && ((queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0) && ((queueFamilyProperties[i].queueFlags & VK_QUEUE_COMPUTE_BIT) == 0))
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            // For other queue types or if no separate compute queue is present, return the first one to support the requested flags
+            for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
+            {
+                if (queueFamilyProperties[i].queueFlags & queueFlags)
+                {
+                    return i;
+                }
+            }
+
+            KRONOS_CORE_ASSERT(false, "Failed to find queue family index!");
+            return 0;
+        }
+
         VkInstance m_Instance;
         VkPhysicalDevice m_PhysicalDevice;
         VkDevice m_LogicalDevice;
+
         uint32_t m_GraphicsQueueFamilyIndex;
         uint32_t m_ComputeQueueFamilyIndex;
         uint32_t m_TransferQueueFamilyIndex;
-
 
         ~SceneRenderer()
         {
