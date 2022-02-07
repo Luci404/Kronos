@@ -36,19 +36,22 @@ namespace Kronos
     const unsigned int SCR_WIDTH = 800;
     const unsigned int SCR_HEIGHT = 600;
 
-    const char* vertexShaderSource = "#version 330 core\n"
+    const char* vertexShaderSource = "#version 450 core\n"
         "layout (location = 0) in vec3 aPos;\n"
-        "layout(std140) uniform Matrices\n"
+        "layout(std140, binding = 0) uniform Matrices\n"
         "{\n"
         "   mat4 projection; \n"
         "   mat4 view; \n"
         "}; \n"
-        "uniform mat4 model;\n"
+        "layout(std140, binding = 1) uniform Object\n"
+        "{\n"
+        "   mat4 model; \n"
+        "}; \n"
         "void main()\n"
         "{\n"
         "   gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
         "}\0";
-    const char* fragmentShaderSource = "#version 330 core\n"
+    const char* fragmentShaderSource = "#version 450 core\n"
         "out vec4 FragColor;\n"
         "void main()\n"
         "{\n"
@@ -207,26 +210,29 @@ namespace Kronos
             // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
             glBindVertexArray(0);
 
-
             // configure a uniform buffer object
             // ---------------------------------
             // first. We get the relevant block indices
-            unsigned int uniformBlockIndexRed = glGetUniformBlockIndex(shaderProgram, "Matrices");
-            // then we link each shader's uniform block to this uniform binding point
-            glUniformBlockBinding(shaderProgram, uniformBlockIndexRed, 0);
-            // Now actually create the buffer
+            /*glUniformBlockBinding(shaderProgram, glGetUniformBlockIndex(shaderProgram, "Matrices"), 0);
             glGenBuffers(1, &uboMatrices);
             glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
             glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
-            // define the range of the buffer that links to a uniform binding point
-            glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));
+            glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));*/
+            glCreateBuffers(1, &uboMatrices);
+            glNamedBufferData(uboMatrices, 2 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // TODO: investigate usage hint
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
 
-            // store the projection matrix (we only do this once now) (note: we're not using zoom anymore by changing the FoV)
-            glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-            glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+            // Object uniform buffer
+            /*glUniformBlockBinding(shaderProgram, glGetUniformBlockIndex(shaderProgram, "Object"), 1);
+            glGenBuffers(1, &uboObject);
+            glBindBuffer(GL_UNIFORM_BUFFER, uboObject);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboObject, 0, sizeof(glm::mat4));*/
+            glCreateBuffers(1, &uboObject);
+            glNamedBufferData(uboObject, sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // TODO: investigate usage hint
+            glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboObject);
 
             m_StaticMeshes[0] = StaticMeshIntegrant();
             m_StaticMeshes[1] = StaticMeshIntegrant();
@@ -250,21 +256,27 @@ namespace Kronos
             glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-            // set the view and projection matrix in the uniform block - we only have to do this once per loop iteration.
-            glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-            glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-            glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            /* Camera */
+            { 
+                glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+                glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+                glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
+                glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
+                glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+                glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            }
 
             for (const StaticMeshIntegrant staticMesh : m_StaticMeshes)
             {
                 glBindVertexArray(cubeVAO);
                 glUseProgram(shaderProgram);
-                glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, &staticMesh.TransformMatrix[0][0]);
+
+                glBindBuffer(GL_UNIFORM_BUFFER, uboObject);
+                glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(staticMesh.TransformMatrix));
+                glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
                 glDrawArrays(GL_TRIANGLES, 0, 36);
             }
-
 
             SwapBuffers(m_Window->GetDeviceContext_TMP());
         }
@@ -280,7 +292,7 @@ namespace Kronos
 
         StaticMeshIntegrant m_StaticMeshes[4];
 
-        unsigned int uboMatrices;
+        unsigned int uboMatrices, uboObject;
         unsigned int cubeVBO, cubeVAO;
         unsigned int shaderProgram;
         HDC ourWindowHandleToDeviceContext;
