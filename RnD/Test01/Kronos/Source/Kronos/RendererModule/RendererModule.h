@@ -4,20 +4,56 @@
 #include "Kronos/IntegrantModule/IntegrantModule.h"
 #include "Kronos/Core/Module.h"
 #include "Kronos/Core/Memory.h"
+#include "Kronos/Core/Assert.h"
+
+#include <vulkan/vulkan.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// https://www.cg.tuwien.ac.at/research/publications/2007/bauchinger-2007-mre/bauchinger-2007-mre-Thesis.pdf
+
 namespace Lada
 {
     namespace RHI
     {
-        class Surface {};
-        class Device {};
-        class CommandList {};
-        class GraphicsPipeline {};
-        class ComputePipeline {};
+        enum class ERendererPlatform
+        {
+            Vulkan,
+            OpenGL
+        };
+
+        class ISurface {};
+        class IDevice {};
+        class ICommandList {};
+        class IGraphicsPipeline {};
+        class IComputePipeline {};
+    
+        namespace VulkanRHI
+        {
+            class VulkanSurface : public ISurface {};
+            class VulkanDevice : public IDevice {};
+            class VulkanCommandList : public ICommandList {};
+            class VulkanGraphicsPipeline : public IGraphicsPipeline {};
+            class VulkanComputePipeline : public IComputePipeline {};
+        }
+
+        namespace OpenGLRHI
+        {
+            class OpenGLSurface : public ISurface {};
+            class OpenGLDevice : public IDevice {};
+            class OpenGLCommandList : public ICommandList {};
+            class OpenGLGraphicsPipeline : public IGraphicsPipeline {};
+            class OpenGLComputePipeline : public IComputePipeline {};
+        }
+
+        class GraphicsContext
+        {
+        public:
+            GraphicsContext() {}
+            void Submit() {}
+        };
     }
 
     class Mesh {};
@@ -27,6 +63,8 @@ namespace Lada
     class ForwardRenderer : public RendererCore {};
     class DeferredRenderer : public RendererCore {};
     
+    class Camera {};
+
     class RenderGraph {};
     class RenderGraphNode {};
 }
@@ -243,7 +281,81 @@ namespace Kronos
             m_StaticMeshes[1].TransformMatrix = glm::translate(m_StaticMeshes[1].TransformMatrix, glm::vec3(0.75f, 0.75f, 0.0f));
             m_StaticMeshes[2].TransformMatrix = glm::translate(m_StaticMeshes[2].TransformMatrix, glm::vec3(-0.75f, -0.75f, 0.0f));
             m_StaticMeshes[3].TransformMatrix = glm::translate(m_StaticMeshes[3].TransformMatrix, glm::vec3(0.75f, -0.75f, 0.0f));
+
+            //
+            InitVulkan();
         }
+
+        void InitVulkan()
+        {
+            // Create instance.
+            VkApplicationInfo applicationInfo{};
+            applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+            applicationInfo.pNext = nullptr;
+            applicationInfo.pApplicationName = "Kronos Application";
+            applicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+            applicationInfo.pEngineName = "Kronos Engine";
+            applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+            applicationInfo.apiVersion = VK_API_VERSION_1_0;
+        
+            VkInstanceCreateInfo instanceCreateInfo{};
+            instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+            instanceCreateInfo.pNext = nullptr;
+            instanceCreateInfo.flags = 0;
+            instanceCreateInfo.pApplicationInfo = &applicationInfo;
+            instanceCreateInfo.enabledLayerCount = 0;
+            instanceCreateInfo.ppEnabledLayerNames = nullptr;
+            instanceCreateInfo.enabledExtensionCount = 0;
+            instanceCreateInfo.ppEnabledExtensionNames = nullptr;
+
+            KRONOS_CORE_ASSERT(vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance) == VK_SUCCESS, "Failed to create instance!");
+
+            // Select physical device.
+            uint32_t physicalDeviceCount = 0;
+            vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, nullptr);
+            KRONOS_CORE_ASSERT(physicalDeviceCount > 0, "Failed to find GPU with Vulkan support!");
+
+            std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+            vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, physicalDevices.data());
+            m_PhysicalDevice = physicalDevices[0]; // TODO: Selection function.
+            KRONOS_CORE_ASSERT(m_PhysicalDevice != VK_NULL_HANDLE, "Failed to find a suitable GPU!");
+        
+            // Find queue families.
+            uint32_t queueFamilyCount = 0;
+            vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, nullptr);
+
+            std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyCount);
+            vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+
+            for (uint32_t i = 0; i < static_cast<uint32_t>(queueFamilyProperties.size()); i++)
+            {
+                if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) m_GraphicsQueueFamilyIndex = i;
+                if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) m_GraphicsQueueFamilyIndex = i;
+                if (queueFamilyProperties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) m_GraphicsQueueFamilyIndex = i;
+            }
+
+
+            // Create logical device.
+            VkDeviceCreateInfo deviceCreateInfo{};
+            deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+            deviceCreateInfo.pNext = nullptr;
+            deviceCreateInfo.flags = 0;
+            deviceCreateInfo.queueCreateInfoCount = 0;
+            deviceCreateInfo.pQueueCreateInfos = nullptr;
+            deviceCreateInfo.enabledLayerCount = 0;
+            deviceCreateInfo.ppEnabledLayerNames = nullptr;
+            deviceCreateInfo.enabledExtensionCount = 0;
+            deviceCreateInfo.ppEnabledExtensionNames = nullptr;
+
+            KRONOS_CORE_ASSERT(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice) == VK_SUCCESS, "Failed to create logical device!");
+        }
+        VkInstance m_Instance;
+        VkPhysicalDevice m_PhysicalDevice;
+        VkDevice m_LogicalDevice;
+        uint32_t m_GraphicsQueueFamilyIndex;
+        uint32_t m_ComputeQueueFamilyIndex;
+        uint32_t m_TransferQueueFamilyIndex;
+
 
         ~SceneRenderer()
         {
