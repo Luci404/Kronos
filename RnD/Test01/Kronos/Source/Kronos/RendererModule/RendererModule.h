@@ -332,12 +332,23 @@ namespace Kronos
             m_TransferQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_TRANSFER_BIT);
 
             // Create logical device.
+            const float defaultQueuePriority(0.0f);
+            std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+            VkDeviceQueueCreateInfo queueCreateInfo{};
+            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            queueCreateInfo.pNext = nullptr;
+            queueCreateInfo.flags = 0;
+            queueCreateInfo.queueFamilyIndex = m_GraphicsQueueFamilyIndex;
+            queueCreateInfo.queueCount = 1;
+            queueCreateInfo.pQueuePriorities = &defaultQueuePriority; // TODO: Research this parameter.
+            queueCreateInfos.push_back(queueCreateInfo);
+
             VkDeviceCreateInfo deviceCreateInfo{};
             deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
             deviceCreateInfo.pNext = nullptr;
             deviceCreateInfo.flags = 0;
-            deviceCreateInfo.queueCreateInfoCount = 0;
-            deviceCreateInfo.pQueueCreateInfos = nullptr;
+            deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+            deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
             deviceCreateInfo.enabledLayerCount = 0;
             deviceCreateInfo.ppEnabledLayerNames = nullptr;
             deviceCreateInfo.enabledExtensionCount = 0;
@@ -346,7 +357,7 @@ namespace Kronos
             KRONOS_CORE_ASSERT(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice) == VK_SUCCESS, "Failed to create logical device!");
         }
 
-        uint32_t inline FindQueueFamilyIndex(const std::vector<VkQueueFamilyProperties>& queueFamilyProperties, VkQueueFlagBits queueFlags) const
+        uint32_t FindQueueFamilyIndex(const std::vector<VkQueueFamilyProperties>& queueFamilyProperties, VkQueueFlagBits queueFlags) const
         {
             // Try to find a queue family index that supports compute but not graphics
             if (queueFlags & VK_QUEUE_COMPUTE_BIT)
