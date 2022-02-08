@@ -6,6 +6,8 @@
 #include "Kronos/Core/Memory.h"
 #include "Kronos/Core/Assert.h"
 
+#include "VulkanJunk.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -110,21 +112,15 @@ namespace Kronos
 		glm::mat4 TransformMatrix;
 	};
 
-	VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-	{
-		std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
-
-		return VK_FALSE;
-	}
-
-
 	class SceneRenderer /* : public Lada::RenderGraph */
 	{
 	public:
+		KronosVulkanJunk::Application vulkanJunk;
+
 		SceneRenderer(Ref<Window> window)
-			: m_Window(window)
+			: m_Window(window), vulkanJunk(window)
 		{
-			PIXELFORMATDESCRIPTOR pixelFormatDescriptor =
+			/*PIXELFORMATDESCRIPTOR pixelFormatDescriptor =
 			{
 				sizeof(PIXELFORMATDESCRIPTOR),
 				1,
@@ -262,23 +258,11 @@ namespace Kronos
 			// configure a uniform buffer object
 			// ---------------------------------
 			// first. We get the relevant block indices
-			/*glUniformBlockBinding(shaderProgram, glGetUniformBlockIndex(shaderProgram, "Matrices"), 0);
-			glGenBuffers(1, &uboMatrices);
-			glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-			glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-			glBindBuffer(GL_UNIFORM_BUFFER, 0);
-			glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboMatrices, 0, 2 * sizeof(glm::mat4));*/
 			glCreateBuffers(1, &uboMatrices);
 			glNamedBufferData(uboMatrices, 2 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // TODO: investigate usage hint
 			glBindBufferBase(GL_UNIFORM_BUFFER, 0, uboMatrices);
 
 			// Object uniform buffer
-			/*glUniformBlockBinding(shaderProgram, glGetUniformBlockIndex(shaderProgram, "Object"), 1);
-			glGenBuffers(1, &uboObject);
-			glBindBuffer(GL_UNIFORM_BUFFER, uboObject);
-			glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
-			glBindBuffer(GL_UNIFORM_BUFFER, 0);
-			glBindBufferRange(GL_UNIFORM_BUFFER, 0, uboObject, 0, sizeof(glm::mat4));*/
 			glCreateBuffers(1, &uboObject);
 			glNamedBufferData(uboObject, sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // TODO: investigate usage hint
 			glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboObject);
@@ -291,7 +275,7 @@ namespace Kronos
 			m_StaticMeshes[0].TransformMatrix = glm::translate(m_StaticMeshes[0].TransformMatrix, glm::vec3(-0.75f, 0.75f, 0.0f));
 			m_StaticMeshes[1].TransformMatrix = glm::translate(m_StaticMeshes[1].TransformMatrix, glm::vec3(0.75f, 0.75f, 0.0f));
 			m_StaticMeshes[2].TransformMatrix = glm::translate(m_StaticMeshes[2].TransformMatrix, glm::vec3(-0.75f, -0.75f, 0.0f));
-			m_StaticMeshes[3].TransformMatrix = glm::translate(m_StaticMeshes[3].TransformMatrix, glm::vec3(0.75f, -0.75f, 0.0f));
+			m_StaticMeshes[3].TransformMatrix = glm::translate(m_StaticMeshes[3].TransformMatrix, glm::vec3(0.75f, -0.75f, 0.0f));*/
 		}
 
 		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
@@ -305,16 +289,16 @@ namespace Kronos
 		}
 		~SceneRenderer()
 		{
-			wglMakeCurrent(ourWindowHandleToDeviceContext, NULL);
-			wglDeleteContext(ourOpenGLRenderingContext);
+			//wglMakeCurrent(ourWindowHandleToDeviceContext, NULL);
+			//wglDeleteContext(ourOpenGLRenderingContext);
 		}
 
 		void Render()
 		{
-			glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
+			vulkanJunk.Render();
+			/*glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			/* Camera */
 			{
 				glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 				glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -336,13 +320,13 @@ namespace Kronos
 				glDrawArrays(GL_TRIANGLES, 0, 36);
 			}
 
-			SwapBuffers(m_Window->GetDeviceContext_TMP());
+			SwapBuffers(m_Window->GetDeviceContext_TMP());*/
 		}
 
 	private:
 		void OnWindowResize(uint32_t newWidth, uint32_t newHeight)
 		{
-			glViewport(0, 0, newWidth, newHeight);
+			//glViewport(0, 0, newWidth, newHeight);
 		}
 
 	private:

@@ -15,6 +15,7 @@ file(GLOB_RECURSE KRONOS_HEADERS "${CMAKE_SOURCE_DIR}/Kronos/Source/*.h")
 file(GLOB_RECURSE KRONOS_SOURCES "${CMAKE_SOURCE_DIR}/Kronos/Source/*.cpp")
 add_library(Kronos STATIC "${KRONOS_HEADERS}" "${KRONOS_SOURCES}")
 set_property(TARGET Kronos PROPERTY CXX_STANDARD 20)
+set_target_properties(Kronos PROPERTIES LINKER_LANGUAGE CXX)
 include_directories(AFTER "${CMAKE_SOURCE_DIR}/Kronos/Source")
 
 target_link_libraries(Kronos PUBLIC "opengl32.lib")
