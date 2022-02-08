@@ -110,6 +110,14 @@ namespace Kronos
         glm::mat4 TransformMatrix;
     };
 
+    VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+    {
+        std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
+
+        return VK_FALSE;
+    }
+
+
     class SceneRenderer /* : public Lada::RenderGraph */
     {
     public:
@@ -285,12 +293,32 @@ namespace Kronos
             m_StaticMeshes[2].TransformMatrix = glm::translate(m_StaticMeshes[2].TransformMatrix, glm::vec3(-0.75f, -0.75f, 0.0f));
             m_StaticMeshes[3].TransformMatrix = glm::translate(m_StaticMeshes[3].TransformMatrix, glm::vec3(0.75f, -0.75f, 0.0f));
 
-            //
             InitVulkan();
+        }
+
+        VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+            auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+            if (func != nullptr) {
+                return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+            }
+            else {
+                return VK_ERROR_EXTENSION_NOT_PRESENT;
+            }
         }
 
         void InitVulkan()
         {
+            // Debug messenger.
+            bool enableValidationLayers = true;
+            VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfo{};
+            if (enableValidationLayers)
+            {
+                debugUtilsMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+                debugUtilsMessengerCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+                debugUtilsMessengerCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+                debugUtilsMessengerCreateInfo.pfnUserCallback = DebugCallback;
+            }
+
             // Create instance.
             VkApplicationInfo applicationInfo{};
             applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -301,22 +329,43 @@ namespace Kronos
             applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
             applicationInfo.apiVersion = VK_API_VERSION_1_0;
 
-            const std::vector<const char*> enabledExtensionNames = {
-                "VK_KHR_surface",
-                "VK_KHR_win32_surface"
-            };
+            std::vector<const char*> enabledExtensionNames = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+            if (enableValidationLayers) enabledExtensionNames.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+            std::vector<const char*> enabledLayers = {};
+            if (enableValidationLayers) enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
+
+            const std::vector<const char*> validationLayers = {  };
+
+            if (enableValidationLayers) {
+                // Check validation layer support.
+                uint32_t layerCount;
+                vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+                std::vector<VkLayerProperties> availableLayers(layerCount);
+                vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+
+                bool layerFound = false;
+                for (const auto& layerProperties : availableLayers) {
+                    if (strcmp("VK_LAYER_KHRONOS_validation", layerProperties.layerName) == 0) { layerFound = true; }
+                }
+                KRONOS_CORE_ASSERT(layerFound, "Validation layers requested, but not available!");
+            }
 
             VkInstanceCreateInfo instanceCreateInfo{};
             instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-            instanceCreateInfo.pNext = nullptr;
+            instanceCreateInfo.pNext = enableValidationLayers ? (VkDebugUtilsMessengerCreateInfoEXT*)&debugUtilsMessengerCreateInfo : nullptr;
             instanceCreateInfo.flags = 0;
             instanceCreateInfo.pApplicationInfo = &applicationInfo;
-            instanceCreateInfo.enabledLayerCount = 0;
-            instanceCreateInfo.ppEnabledLayerNames = nullptr;
+            instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(enabledLayers.size());
+            instanceCreateInfo.ppEnabledLayerNames = enabledLayers.data();
             instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensionNames.size());
             instanceCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
-
             KRONOS_CORE_ASSERT(vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance) == VK_SUCCESS, "Failed to create instance!");
+
+            if (enableValidationLayers)
+            {
+                KRONOS_CORE_ASSERT(CreateDebugUtilsMessengerEXT(m_Instance, &debugUtilsMessengerCreateInfo, nullptr, &m_DebugMessenger) == VK_SUCCESS, "Failed to set up debug messenger!");
+            }
 
             // Select physical device.
             uint32_t physicalDeviceCount = 0;
@@ -436,7 +485,6 @@ namespace Kronos
             uint32_t imageCount = surfaceCapabilities.minImageCount + 1;
             if (surfaceCapabilities.maxImageCount > 0 && imageCount > surfaceCapabilities.maxImageCount) {
                 imageCount = surfaceCapabilities.maxImageCount;
-            
             }
 
             VkSwapchainCreateInfoKHR swapchainCreateInfo{};
@@ -459,6 +507,7 @@ namespace Kronos
             swapchainCreateInfo.presentMode = chosenPresentMode;
             swapchainCreateInfo.clipped = VK_TRUE;
             swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+            KRONOS_CORE_ASSERT(vkCreateSwapchainKHR(m_LogicalDevice, &swapchainCreateInfo, nullptr, &m_Swapchain) == VK_SUCCESS, "Failed to create swapchain!");
         }
 
         uint32_t FindQueueFamilyIndex(const std::vector<VkQueueFamilyProperties>& queueFamilyProperties, VkQueueFlagBits queueFlags) const
@@ -501,10 +550,14 @@ namespace Kronos
             return 0;
         }
 
+        // TODO: Debug messenger
+
         VkInstance m_Instance;
+        VkDebugUtilsMessengerEXT m_DebugMessenger;
         VkPhysicalDevice m_PhysicalDevice;
         VkSurfaceKHR m_Surface;
         VkDevice m_LogicalDevice;
+        VkSwapchainKHR m_Swapchain;
 
         uint32_t m_GraphicsQueueFamilyIndex;
         uint32_t m_ComputeQueueFamilyIndex;
