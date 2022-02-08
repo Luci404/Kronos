@@ -13,6 +13,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <algorithm>
+
 // https://www.cg.tuwien.ac.at/research/publications/2007/bauchinger-2007-mre/bauchinger-2007-mre-Thesis.pdf
 
 namespace Lada
@@ -337,7 +339,7 @@ namespace Kronos
             m_ComputeQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_COMPUTE_BIT);
             m_TransferQueueFamilyIndex = FindQueueFamilyIndex(queueFamilyProperties, VK_QUEUE_TRANSFER_BIT);
 
-            // Create window surface
+            // Create window surface.
             VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
             surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
             surfaceCreateInfo.hwnd = m_Window->GetHWND_TMP();
@@ -368,6 +370,95 @@ namespace Kronos
             deviceCreateInfo.ppEnabledExtensionNames = nullptr;
 
             KRONOS_CORE_ASSERT(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_LogicalDevice) == VK_SUCCESS, "Failed to create logical device!");
+
+            /// Create swapchain.
+            // Surface format.
+            uint32_t surfaceFormatCount = 0;
+            vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface, &surfaceFormatCount, nullptr);
+            KRONOS_CORE_ASSERT(surfaceFormatCount > 0, "");
+            std::vector<VkSurfaceFormatKHR> surfaceFormats(surfaceFormatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(m_PhysicalDevice, m_Surface, &surfaceFormatCount, surfaceFormats.data());
+            
+            bool chooseSurfaceFormatSuccess = false;
+            VkSurfaceFormatKHR chosenSurfaceFormat;
+            for (const auto& surfaceFormat : surfaceFormats) {
+                if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_SRGB && surfaceFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+                    chosenSurfaceFormat = surfaceFormat;
+                    chooseSurfaceFormatSuccess = true;
+                }
+            }
+            KRONOS_CORE_ASSERT(chooseSurfaceFormatSuccess, "Failed to choose surface format.");
+
+            // Present mode.
+            uint32_t presentModeCount;
+            vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, nullptr);
+            std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+            KRONOS_CORE_ASSERT(presentModeCount > 0, "");
+            vkGetPhysicalDeviceSurfacePresentModesKHR(m_PhysicalDevice, m_Surface, &presentModeCount, presentModes.data());
+
+            bool choosePresentModeSuccess = false;
+            VkPresentModeKHR chosenPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+            for (const auto& presentMode : presentModes) {
+                if (presentMode == VK_PRESENT_MODE_MAILBOX_KHR)
+                {
+                    chosenPresentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+                    choosePresentModeSuccess = true;
+                }
+                if (presentMode == VK_PRESENT_MODE_FIFO_KHR)
+                {
+                    choosePresentModeSuccess = true;
+                }
+            }
+            KRONOS_CORE_ASSERT(choosePresentModeSuccess, "Failed to choose present mode.");
+
+            // Extent
+            VkSurfaceCapabilitiesKHR surfaceCapabilities;
+            vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface, &surfaceCapabilities);
+            
+            VkExtent2D chosenExtent = surfaceCapabilities.currentExtent;
+            if (surfaceCapabilities.currentExtent.width == UINT32_MAX) {
+                int width, height;
+                //glfwGetFramebufferSize(m_Window, &width, &height);
+                width = 1600;
+                height = 900;
+
+                VkExtent2D actualExtent = {
+                    static_cast<uint32_t>(width),
+                    static_cast<uint32_t>(height)
+                };
+
+                actualExtent.width = std::clamp(actualExtent.width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
+                actualExtent.height = std::clamp(actualExtent.height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
+
+                chosenExtent = actualExtent;
+            }
+
+            uint32_t imageCount = surfaceCapabilities.minImageCount + 1;
+            if (surfaceCapabilities.maxImageCount > 0 && imageCount > surfaceCapabilities.maxImageCount) {
+                imageCount = surfaceCapabilities.maxImageCount;
+            
+            }
+
+            VkSwapchainCreateInfoKHR swapchainCreateInfo{};
+            swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+            swapchainCreateInfo.pNext = nullptr;
+            swapchainCreateInfo.flags = 0;
+            swapchainCreateInfo.surface = m_Surface;
+            swapchainCreateInfo.minImageCount = imageCount;
+            swapchainCreateInfo.imageFormat = chosenSurfaceFormat.format;
+            swapchainCreateInfo.imageColorSpace = chosenSurfaceFormat.colorSpace;
+            swapchainCreateInfo.imageExtent = chosenExtent;
+            swapchainCreateInfo.imageArrayLayers = 1;
+            swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+            // TODO: The image sharing mode should be diffrent if the graphics queue and present queue are not non-equal.
+            swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            swapchainCreateInfo.queueFamilyIndexCount = 0;
+            swapchainCreateInfo.pQueueFamilyIndices = nullptr;
+            swapchainCreateInfo.preTransform = surfaceCapabilities.currentTransform;
+            swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+            swapchainCreateInfo.presentMode = chosenPresentMode;
+            swapchainCreateInfo.clipped = VK_TRUE;
+            swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
         }
 
         uint32_t FindQueueFamilyIndex(const std::vector<VkQueueFamilyProperties>& queueFamilyProperties, VkQueueFlagBits queueFlags) const
