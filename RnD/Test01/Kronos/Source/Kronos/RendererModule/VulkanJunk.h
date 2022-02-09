@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Kronos/RendererModule/VulkanAbstraction.h"
+
 #include "Kronos/WindowModule/WindowModule.h"
 #include "Kronos/Core/Memory.h"
 #include "Kronos/Core/Assert.h"
@@ -95,8 +97,8 @@ namespace KronosVulkanJunk
 		void Render();
 
 	private:
-		void CreateInstance();
-		void SetupDebugMessenger();
+		void CreateInstance(); // DONE
+		void SetupDebugMessenger(); // DONE
 		void CreateSurface();
 		void SelectPhysicalDevice();
 		void CreateLogicalDevice();
