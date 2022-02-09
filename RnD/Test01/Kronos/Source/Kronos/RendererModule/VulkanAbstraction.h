@@ -12,6 +12,70 @@ namespace Kronos
         bool Headless = false;
     };
 
+    struct VulkanPhysicalDeviceSpecifications
+    {
+        VkPhysicalDeviceProperties Properties;
+        VkPhysicalDeviceFeatures Features;
+        VkPhysicalDeviceMemoryProperties DeviceMemoryProperties;
+        std::vector<VkQueueFamilyProperties> QueueFamilyProperties;
+        std::vector<const std::string> SupportedExtensions;
+
+    public:
+        VulkanPhysicalDeviceSpecifications(VkPhysicalDevice physicalDevice)
+        {
+        }
+    };
+
+    struct VulkanPhysicalDeviceSurfaceSpecifications
+    {
+        VkSurfaceCapabilitiesKHR SurfaceCapabilities;
+        std::vector<VkSurfaceFormatKHR> SurfaceFormats;
+        std::vector<VkPresentModeKHR> SurfacePresentModes;
+
+    public:
+        VulkanPhysicalDeviceSpecifications(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+        {
+        }
+    };
+
+    class VulkanDevice 
+    {
+    public:
+        VulkanDevice(VulkanConfiguration vulkanConfiguration)
+            : m_VulkanConfiguration(vulkanConfiguration)
+        {
+            KRONOS_CORE_ASSERT(m_VulkanConfiguration.Headless, "Devices created with the intend of non-headless rendering should be using a constructor with a surface parameter!");
+        }
+
+        VulkanDevice(VulkanConfiguration vulkanConfiguration, VkSurfaceKHR surface)
+            : m_VulkanConfiguration(vulkanConfiguration), m_Surface(surface)
+        {
+            KRONOS_CORE_ASSERT(!m_VulkanConfiguration.Headless, "Devices created with the intend of headless rendering should not be using a constructor with a surface parameter!");
+        }
+
+    private:
+        void ChoosePhysicalDevice()
+        {
+            auto evaluatePhysicalDevice = [&](const VkPhysicalDevice& physicalDevice) -> uint32_t {
+                VulkanPhysicalDeviceSpecifications physicalDeviceSpecifications = VulkanPhysicalDeviceSpecifications(physicalDevice);
+                // Make sure everything fits the requirements...
+
+                if (!m_VulkanConfiguration.Headless)
+                {
+                    VulkanPhysicalDeviceSurfaceSpecifications physicalDeviceSurfaceSpecifications = VulkanPhysicalDeviceSurfaceSpecifications(physicalDevice, surface);
+                    // Make sure everything fits the requirements, what surface specs concerns... prioritize the the best present mode etc.
+                }
+            };
+        }
+
+    private:
+        VulkanConfiguration m_VulkanConfiguration;
+        VkSurfaceKHR m_Surface;
+    };
+
+    class VulkanSurface {};
+    class VulkanSwapchain {};
+
     class VulkanDevice
     {
     public:
