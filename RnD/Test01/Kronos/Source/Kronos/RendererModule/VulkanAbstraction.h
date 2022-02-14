@@ -1,226 +1,280 @@
 #pragma once
 
+#include "Kronos/Core/Assert.h"
+
+#define VK_USE_PLATFORM_WIN32_KHR 
 #include <vulkan/vulkan.h>
+
+#include <array>
+#include <string>
+#include <vector>
+#include <set>
 
 namespace Kronos
 {
-    typedef uint32_t VulkanQueueFamilyIndex;
+	typedef uint32_t VulkanQueueFamilyIndex;
 
-    struct VulkanConfiguration
-    {
-        bool Debug = true;
-        bool Headless = false;
-    };
+	struct VulkanConfiguration
+	{
+		std::string ApplicationName = "Kronos Application";
+		bool Debug = true;
+		bool Headless = false;
+	};
 
-    struct VulkanPhysicalDeviceSpecifications
-    {
-        VkPhysicalDeviceProperties Properties;
-        VkPhysicalDeviceFeatures Features;
-        VkPhysicalDeviceMemoryProperties DeviceMemoryProperties;
-        std::vector<VkQueueFamilyProperties> QueueFamilyProperties;
-        std::vector<const std::string> SupportedExtensions;
-
-    public:
-        VulkanPhysicalDeviceSpecifications(VkPhysicalDevice physicalDevice)
-        {
-        }
-    };
-
-    struct VulkanPhysicalDeviceSurfaceSpecifications
-    {
-        VkSurfaceCapabilitiesKHR SurfaceCapabilities;
-        std::vector<VkSurfaceFormatKHR> SurfaceFormats;
-        std::vector<VkPresentModeKHR> SurfacePresentModes;
-
-    public:
-        VulkanPhysicalDeviceSpecifications(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
-        {
-        }
-    };
-
-    class VulkanDevice 
-    {
-    public:
-        VulkanDevice(VulkanConfiguration vulkanConfiguration)
-            : m_VulkanConfiguration(vulkanConfiguration)
-        {
-            KRONOS_CORE_ASSERT(m_VulkanConfiguration.Headless, "Devices created with the intend of non-headless rendering should be using a constructor with a surface parameter!");
-        }
-
-        VulkanDevice(VulkanConfiguration vulkanConfiguration, VkSurfaceKHR surface)
-            : m_VulkanConfiguration(vulkanConfiguration), m_Surface(surface)
-        {
-            KRONOS_CORE_ASSERT(!m_VulkanConfiguration.Headless, "Devices created with the intend of headless rendering should not be using a constructor with a surface parameter!");
-        }
-
-    private:
-        void ChoosePhysicalDevice()
-        {
-            auto evaluatePhysicalDevice = [&](const VkPhysicalDevice& physicalDevice) -> uint32_t {
-                VulkanPhysicalDeviceSpecifications physicalDeviceSpecifications = VulkanPhysicalDeviceSpecifications(physicalDevice);
-                // Make sure everything fits the requirements...
-
-                if (!m_VulkanConfiguration.Headless)
-                {
-                    VulkanPhysicalDeviceSurfaceSpecifications physicalDeviceSurfaceSpecifications = VulkanPhysicalDeviceSurfaceSpecifications(physicalDevice, surface);
-                    // Make sure everything fits the requirements, what surface specs concerns... prioritize the the best present mode etc.
-                }
-            };
-        }
-
-    private:
-        VulkanConfiguration m_VulkanConfiguration;
-        VkSurfaceKHR m_Surface;
-    };
-
-    class VulkanSurface {};
-    class VulkanSwapchain {};
-
-    class VulkanDevice
-    {
-    public:
-        VulkanDevice(VulkanConfiguration vulkanConfiguration)
-            : m_VulkanConfiguration(vulkanConfiguration)
-        {
-            CreateInstance();
-            ChoosePhysicalDevice();
-            CreateLogicalDevice();
-        };
+	struct VulkanPhysicalDeviceSpecifications
+	{
 
 
-        void CreateBuffer() const {};
+	public:
+		VulkanPhysicalDeviceSpecifications(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface = VK_NULL_HANDLE) {}
+	};
 
-        VulkanQueueFamilyIndex GetPresentQueueFamilyIndex() const {};
-        VulkanQueueFamilyIndex GetGraphicsQueueFamilyIndex() const {};
-    
-    private:
-        VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-        {
-            std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
+	// ptr vs reference
+	/*
+	SHORT: Some coding convention (like Google's) prescribe that one should always use pointers, or const references, because references have a bit of unclear-syntax: they have reference behaviour but value syntax.
 
-            return VK_FALSE;
-        }
+	Besides allowing NULL values and dealing with raw arrays, it seems the choice comes down to personal preference.
+	I've accepted the answer below that references Google's C++ Style Guide(https://google.github.io/styleguide/cppguide.html#Reference_Arguments),
+	as they present the view that "References can be confusing, as they have value syntax but pointer semantics.".
 
-        void CreateInstance()
-        {
-            VkApplicationInfo applicationInfo{};
-            applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-            applicationInfo.pNext = nullptr;
-            applicationInfo.pApplicationName = "Kronos Application";
-            applicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-            applicationInfo.pEngineName = "Kronos Engine";
-            applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-            applicationInfo.apiVersion = VK_API_VERSION_1_0;
+	Due to the additional work required to sanitise pointer arguments that should not be NULL (e.g. add_one(0)
+	will call the pointer version and break during runtime), it makes sense from a maintainability perspective to
+	use references where an object MUST be present, though it is a shame to lose the syntactic clarity.
+	*/
+	class VulkanPhysicalDevice
+	{
+		friend class VulkanInstance;
 
-            std::vector<const char*> enabledInstanceLayers = {};
-            if (m_VulkanConfiguration.EnableValidationLayers) enabledInstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
+	public:
+		VkPhysicalDevice GetVkPhysicalDevice() const { return m_PhysicalDevice; }
 
-            std::vector<const char*> enabledInstanceExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
-            if (m_VulkanConfiguration.EnableValidationLayers) enabledInstanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		uint32_t GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamilyIndex; }
+		uint32_t GetComputeQueueFamilyIndex() const { return m_ComputeQueueFamilyIndex; }
+		uint32_t GetTransferQueueFamilyIndex() const { return m_TransferQueueFamilyIndex; }
 
-            VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfo{};
-            debugUtilsMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-            debugUtilsMessengerCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-            debugUtilsMessengerCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-            debugUtilsMessengerCreateInfo.pfnUserCallback = DebugUtilsMessengerCallback;
+	private:
+		VulkanPhysicalDevice(VkPhysicalDevice physicalDevice)
+			: m_PhysicalDevice(physicalDevice)
+		{
+			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &m_Properties);
+			vkGetPhysicalDeviceFeatures(m_PhysicalDevice, &m_Features);
+			vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &m_MemoryProperties);
 
-            VkInstanceCreateInfo instanceCreateInfo{};
-            instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-            instanceCreateInfo.pNext = m_VulkanConfiguration.EnableValidationLayers ? (VkDebugUtilsMessengerCreateInfoEXT*)&debugUtilsMessengerCreateInfo : nullptr;
-            instanceCreateInfo.flags = 0;
-            instanceCreateInfo.pApplicationInfo = &applicationInfo;
-            instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(enabledInstanceLayers.size());
-            instanceCreateInfo.ppEnabledLayerNames = enabledInstanceLayers.data();
-            instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledInstanceExtensions.size());
-            instanceCreateInfo.ppEnabledExtensionNames = enabledInstanceExtensions.data();
-            KRONOS_CORE_ASSERT(vkCreateInstance(&createInfo, nullptr, &m_Instance) == VK_SUCCESS, "Failed to create instance!");
+			uint32_t queueFamilyCount;
+			vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &queueFamilyCount, nullptr);
+			KRONOS_CORE_ASSERT(queueFamilyCount > 0, "Physical device has no queue families!");
+			m_QueueFamilyProperties.resize(queueFamilyCount);
+			vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, m_QueueFamilyProperties.data());
 
-            if (m_VulkanConfiguration.EnableValidationLayers)
-            {
-                auto vkCreateDebugUtilsMessengerEXTProcAddr = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT");
-                KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr != nullptr, "Failed to get 'vkCreateDebugUtilsMessengerEXT' proc address!");
-                KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr(m_Instance, &createInfo, nullptr, &m_DebugMessenger) == VK_SUCCESS, "Failed to set up debug messenger!");
-            }
-        }
-    
-        void ChoosePhysicalDevice()
-        {
-            uint32_t physicalDeviceCount = 0;
-            vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, nullptr);
-            KRONOS_CORE_ASSERT(physicalDeviceCount > 0, "Failed to find physical device with Vulkan support!");
+			uint32_t extensionPropertyCount = 0;
+			vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionPropertyCount, nullptr);
+			if (extensionPropertyCount > 0)
+			{
+				m_ExtensionProperties.resize(extensionPropertyCount);
+				vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionPropertyCount, &m_ExtensionProperties.front());
+			}
+		}
 
-            std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
-            vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, physicalDevices.data());
+	private:
+		VkPhysicalDevice m_PhysicalDevice;
 
-            auto evaluatePhysicalDevice = [](const VkPhysicalDevice& physicalDevice) -> uint32_t {
-                uint32_t deviceExtensionCount = 0;
-                vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &deviceExtensionCount, nullptr);
-                std::vector<VkExtensionProperties> deviceExtensions(deviceExtensionCount);
-                vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &deviceExtensionCount, deviceExtensions.data());
-                
-                bool deviceSupportsRequiredDeviceExtensions = true;
-                std::set<std::string> requiredDeviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-                for (const auto& requiredDeviceExtension : requiredDeviceExtensions) {
-                    bool deviceExtensionsContainsrequiredDeviceExtension = std::count(deviceExtensions.begin(), deviceExtensions.end(), requiredDeviceExtension);
-                    deviceSupportsRequiredDeviceExtensions = deviceSupportsRequiredDeviceExtensions ? deviceExtensionsContainsrequiredDeviceExtension : false;
-                }
+		uint32_t m_GraphicsQueueFamilyIndex;
+		uint32_t m_ComputeQueueFamilyIndex;
+		uint32_t m_TransferQueueFamilyIndex;
+		
+		VkPhysicalDeviceProperties m_Properties;
+		VkPhysicalDeviceFeatures m_Features;
+		VkPhysicalDeviceMemoryProperties m_MemoryProperties;
+		std::vector<VkQueueFamilyProperties> m_QueueFamilyProperties;
+		std::vector<VkExtensionProperties> m_ExtensionProperties;
 
-                bool deviceSupportsRequiredSwapchainFeatures = true;
-                if (deviceSupportsRequiredDeviceExtensions)
-                {
-                    VkSurfaceCapabilitiesKHR capabilities;
-                    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, m_Surface, &capabilities);
+		VkSurfaceCapabilitiesKHR m_SurfaceCapabilities;
+		std::vector<VkSurfaceFormatKHR> m_SurfaceFormats;
+		std::vector<VkPresentModeKHR> m_SurfacePresentModes;
+	};
 
-                    std::vector<VkPresentModeKHR> presentModes;
+	class VulkanInstance
+	{
+	public:
+		VulkanInstance(VulkanConfiguration configuration)
+			: m_VulkanConfiguration(configuration)
+		{
+			CreateInstance();
+			GetPhysicalDevices();
+		}
 
-                    std::vector<VkSurfaceFormatKHR> formats;
-                    
-                }
+		VkInstance GetVkInstance() const { return m_Instance; }
 
-                bool deviceSupportsRequiredDeviceFeatures = true;
-                VkPhysicalDeviceFeatures supportedDeviceFeatures;
-                vkGetPhysicalDeviceFeatures(physicalDevice, &supportedDeviceFeatures);
-                deviceSupportsRequiredDeviceFeatures = deviceSupportsRequiredDeviceFeatures ? supportedDeviceFeatures.samplerAnisotropy : false;
+		VulkanPhysicalDevice* GetFirstPhysicalDevice() { return &m_PhysicalDevices.front(); }
 
-                bool deviceMeetsMinimumRequirements = deviceSupportsRequiredDeviceExtensions && deviceSupportsRequiredSwapchainFeatures && deviceSupportsRequiredDeviceFeatures;
-                if (!deviceMeetsMinimumRequirements) { return 0; }
-            };
+	private:
+		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+		{
+			std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
 
-            uint32_t chosenPhysicalDeviceScore = 0;
-            VkPhysicalDevice chosenPhysicalDevice = VK_NULL_HANDLE;
-            for (const auto& physicalDevice : physicalDevices) {
-                uint32_t physicalDeviceScore = evaluatePhysicalDevice(physicalDevice);
-                if (physicalDeviceScore >= 1 && physicalDeviceScore > chosenPhysicalDeviceScore)
-                {
-                    chosenPhysicalDevice = physicalDevice;
-                    chosenPhysicalDeviceScore = physicalDeviceScore;
-                }
-            }
-            m_PhysicalDevice = chosenPhysicalDevice;
-            KRONOS_CORE_ASSERT(m_PhysicalDevice != VK_NULL_HANDLE, "Failed to find a suitable physical device!");
-        };
-        
-        void CreateLogicalDevice() {};
+			return VK_FALSE;
+		}
 
-    private:
-        VulkanConfiguration m_VulkanConfiguration;
+		void CreateInstance()
+		{
+			VkApplicationInfo applicationInfo{};
+			applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+			applicationInfo.pNext = nullptr;
+			applicationInfo.pApplicationName = m_VulkanConfiguration.ApplicationName.c_str();
+			applicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+			applicationInfo.pEngineName = "Kronos Engine";
+			applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+			applicationInfo.apiVersion = VK_API_VERSION_1_0;
 
-        VulkanQueueFamilyIndex m_PresentQueueFamilyIndex;
-        VulkanQueueFamilyIndex m_GraphicsQueueFamilyIndex;
-    
-        VkInstance m_Instance;
-        VkDebugUtilsMessengerEXT m_DebugMessenger;
-        VkPhysicalDevice m_PhysicalDevice;
-    };
+			std::vector<const char*> enabledInstanceLayers = {};
+			if (m_VulkanConfiguration.Debug) enabledInstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 
-    class VulkanSwapchain 
-    {
-    public:
-        VulkanSwapchain(VulkanDevice& vulkanDevice)
-            : m_VulkanDevice(vulkanDevice)
-        {}
+			std::vector<const char*> enabledInstanceExtensions = { "VK_KHR_surface", "VK_KHR_win32_surface" };
+			if (m_VulkanConfiguration.Debug) enabledInstanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
-    private:
-        VulkanDevice m_VulkanDevice;
-    };
+			VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfo{};
+			debugUtilsMessengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+			debugUtilsMessengerCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+			debugUtilsMessengerCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+			debugUtilsMessengerCreateInfo.pfnUserCallback = &DebugUtilsMessengerCallback;
+
+			VkInstanceCreateInfo instanceCreateInfo{};
+			instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+			instanceCreateInfo.pNext = m_VulkanConfiguration.Debug ? (VkDebugUtilsMessengerCreateInfoEXT*)&debugUtilsMessengerCreateInfo : nullptr;
+			instanceCreateInfo.flags = 0;
+			instanceCreateInfo.pApplicationInfo = &applicationInfo;
+			instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(enabledInstanceLayers.size());
+			instanceCreateInfo.ppEnabledLayerNames = enabledInstanceLayers.data();
+			instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledInstanceExtensions.size());
+			instanceCreateInfo.ppEnabledExtensionNames = enabledInstanceExtensions.data();
+			KRONOS_CORE_ASSERT(vkCreateInstance(&instanceCreateInfo, nullptr, &m_Instance) == VK_SUCCESS, "Failed to create instance!");
+
+			if (m_VulkanConfiguration.Debug)
+			{
+				auto vkCreateDebugUtilsMessengerEXTProcAddr = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT");
+				KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr != nullptr, "Failed to get 'vkCreateDebugUtilsMessengerEXT' proc address!");
+				KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr(m_Instance, &debugUtilsMessengerCreateInfo, nullptr, &m_DebugMessenger) == VK_SUCCESS, "Failed to set up debug messenger!");
+			}
+		}
+
+		void GetPhysicalDevices()
+		{
+			uint32_t physicalDeviceCount = 0;
+			vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, nullptr);
+			KRONOS_CORE_ASSERT(physicalDeviceCount > 0, "Failed to find physical device with Vulkan support!");
+
+			std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+			vkEnumeratePhysicalDevices(m_Instance, &physicalDeviceCount, physicalDevices.data());
+
+			for (const auto& physicalDevice : physicalDevices) {
+				m_PhysicalDevices.push_back(VulkanPhysicalDevice(physicalDevice));
+			}
+		}
+
+	private:
+		VulkanConfiguration m_VulkanConfiguration;
+
+		VkInstance m_Instance;
+		VkDebugUtilsMessengerEXT m_DebugMessenger;
+		
+		std::vector<VulkanPhysicalDevice> m_PhysicalDevices;
+	};
+
+	class VulkanSurface
+	{
+	public:
+		VulkanSurface(VulkanInstance* instance, Window* window)
+		{
+			VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+			surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+			surfaceCreateInfo.hwnd = window->GetHWND_TMP();
+			surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+			KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(instance->GetVkInstance(), &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
+		}
+
+	private:
+		VkSurfaceKHR m_Surface;
+	};
+
+	class VulkanDevice
+	{
+	public:
+		VulkanDevice(VulkanInstance* instance, VulkanPhysicalDevice* physicalDevice)
+			: m_Instance(instance), m_PhysicalDevice(physicalDevice)
+		{
+			std::set<uint32_t> uniqueQueueFamilies = {
+				m_PhysicalDevice->GetGraphicsQueueFamilyIndex(),
+				m_PhysicalDevice->GetComputeQueueFamilyIndex(),
+				m_PhysicalDevice->GetTransferQueueFamilyIndex()
+			};
+
+			float defaultQueuePriority = 1.0f;
+			std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+			for (uint32_t queueFamily : uniqueQueueFamilies) {
+				VkDeviceQueueCreateInfo queueCreateInfo{};
+				queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				queueCreateInfo.queueFamilyIndex = queueFamily;
+				queueCreateInfo.queueCount = 1;
+				queueCreateInfo.pQueuePriorities = &defaultQueuePriority;
+				queueCreateInfos.push_back(queueCreateInfo);
+			}
+
+			const std::vector<const char*> enabledLayerNames = { "VK_LAYER_KHRONOS_validation" };
+
+			const std::vector<const char*> enabledExtensionNames = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+
+			VkPhysicalDeviceFeatures enabledFeatures{};
+			enabledFeatures.samplerAnisotropy = VK_TRUE;
+
+			VkDeviceCreateInfo deviceCreateInfo{};
+			deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			deviceCreateInfo.pNext = nullptr;
+			deviceCreateInfo.flags = 0;
+			deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;
+			deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();;
+			deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(enabledLayerNames.size());
+			deviceCreateInfo.ppEnabledLayerNames = enabledLayerNames.data();
+			deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensionNames.size());;
+			deviceCreateInfo.ppEnabledExtensionNames = enabledExtensionNames.data();
+			deviceCreateInfo.pEnabledFeatures = &enabledFeatures;
+
+			vkCreateDevice(m_PhysicalDevice->GetVkPhysicalDevice(), &deviceCreateInfo, nullptr, &m_LogicalDevice);
+		}
+
+		VulkanPhysicalDevice* GetPhysicalDevice() const { return m_PhysicalDevice; }
+
+	private:
+		VkDevice m_LogicalDevice;
+	
+		VulkanInstance* m_Instance;
+		VulkanPhysicalDevice* m_PhysicalDevice;
+	};
+
+	/*class VulkanSwapchain
+	{
+	public:
+		VulkanSwapchain(VulkanDevice* device, VulkanSurface* surface)
+			: m_Instance(instance), m_Surface(surface)
+		{
+			VkSwapchainCreateInfoKHR swapchainCreateInfo{};
+			swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+			swapchainCreateInfo.pNext = nullptr;
+			swapchainCreateInfo.flags = 0;
+			swapchainCreateInfo.surface = surface->GetVkSurfaceKHR();
+			swapchainCreateInfo.minImageCount = ;
+			swapchainCreateInfo.imageFormat =;
+			swapchainCreateInfo.imageColorSpace =;
+			swapchainCreateInfo.imageExtent =;
+			swapchainCreateInfo.imageArrayLayers =;
+			swapchainCreateInfo.imageUsage =;
+			swapchainCreateInfo.imageSharingMode =;
+			swapchainCreateInfo.queueFamilyIndexCount =;
+			swapchainCreateInfo.pQueueFamilyIndices = ;
+			swapchainCreateInfo.preTransform =;
+			swapchainCreateInfo.compositeAlpha =;
+			swapchainCreateInfo.presentMode =;
+			swapchainCreateInfo.clipped =;
+			swapchainCreateInfo.oldSwapchain =;
+		}
+	};*/
 }

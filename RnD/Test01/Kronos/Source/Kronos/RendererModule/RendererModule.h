@@ -6,7 +6,8 @@
 #include "Kronos/Core/Memory.h"
 #include "Kronos/Core/Assert.h"
 
-#include "VulkanJunk.h"
+#include "VulkanAbstraction.h"
+//#include "VulkanJunk.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -74,6 +75,15 @@ namespace Lada
 	class RenderGraphNode {};
 }
 
+void VulkanStuff(Kronos::Window* window)
+{
+	Kronos::VulkanConfiguration configuration{ .Debug = true, .Headless = false};
+	Kronos::VulkanInstance instance = Kronos::VulkanInstance(configuration);
+	Kronos::VulkanSurface surface = Kronos::VulkanSurface(&instance, window);
+	Kronos::VulkanDevice device = Kronos::VulkanDevice(&instance, instance.GetFirstPhysicalDevice());
+	//Kronos::VulkanSwapchain swapchain = Kronos::VulkanSwapchain(&device, &surface);
+}
+
 namespace Kronos
 {
 	const unsigned int SCR_WIDTH = 800;
@@ -115,11 +125,12 @@ namespace Kronos
 	class SceneRenderer /* : public Lada::RenderGraph */
 	{
 	public:
-		KronosVulkanJunk::Application vulkanJunk;
+		//KronosVulkanJunk::Application vulkanJunk;
 
 		SceneRenderer(Ref<Window> window)
-			: m_Window(window), vulkanJunk(window)
+			: m_Window(window)/*, vulkanJunk(window)*/
 		{
+			VulkanStuff(window.get());
 			/*PIXELFORMATDESCRIPTOR pixelFormatDescriptor =
 			{
 				sizeof(PIXELFORMATDESCRIPTOR),
@@ -278,15 +289,6 @@ namespace Kronos
 			m_StaticMeshes[3].TransformMatrix = glm::translate(m_StaticMeshes[3].TransformMatrix, glm::vec3(0.75f, -0.75f, 0.0f));*/
 		}
 
-		VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-			auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-			if (func != nullptr) {
-				return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-			}
-			else {
-				return VK_ERROR_EXTENSION_NOT_PRESENT;
-			}
-		}
 		~SceneRenderer()
 		{
 			//wglMakeCurrent(ourWindowHandleToDeviceContext, NULL);
@@ -295,7 +297,7 @@ namespace Kronos
 
 		void Render()
 		{
-			vulkanJunk.Render();
+			//vulkanJunk.Render();
 			/*glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
