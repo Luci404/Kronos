@@ -1,6 +1,9 @@
 #pragma once
 
-#include "Kronos/RendererModule/VulkanAbstraction.h"
+#include "Kronos/RendererModule/Vulkan/VulkanInstance.h"
+#include "Kronos/RendererModule/Vulkan/VulkanPhysicalDevice.h"
+#include "Kronos/RendererModule/Vulkan/VulkanDevice.h"
+
 
 #include "Kronos/WindowModule/WindowModule.h"
 #include "Kronos/Core/Memory.h"
@@ -97,11 +100,11 @@ namespace KronosVulkanJunk
 		void Render();
 
 	private:
-		void CreateInstance(); // DONE
-		void SetupDebugMessenger(); // DONE
-		void CreateSurface();
+		//void CreateInstance(); // DONE
+		//void SetupDebugMessenger(); // DONE
+		//void CreateSurface();
 		void SelectPhysicalDevice();
-		void CreateLogicalDevice();
+		/*void CreateLogicalDevice();
 		void CreateSwapChain();
 		void CreateImageViews();
 		void CreateRenderPass();
@@ -161,7 +164,7 @@ namespace KronosVulkanJunk
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-		std::vector<char> ReadFile(const std::string& filepath);
+		std::vector<char> ReadFile(const std::string& filepath);*/
 
 	private:
 		Kronos::Ref<Kronos::Window> m_Window;
@@ -180,9 +183,14 @@ namespace KronosVulkanJunk
 		const bool enableValidationLayers = true;
 #endif
 
-		VkInstance m_VulkanInstance;
+		Kronos::Scope<Kronos::VulkanInstance> m_Instance;
+		Kronos::Scope<Kronos::VulkanPhysicalDevice> m_PhysicalDevice;
+		Kronos::Scope<Kronos::VulkanDevice> m_Device;
+		VkPhysicalDevice m_PhysicalDevice2 = VK_NULL_HANDLE;
+
+		/*VkInstance m_VulkanInstance();
 		VkDebugUtilsMessengerEXT m_DebugMessenger;
-		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
+		VkPhysicalDevice m_PhysicalDevice2 = VK_NULL_HANDLE;
 		VkDevice m_Device;
 		VkQueue m_GraphicsQueue;
 		VkQueue m_PresentQueue;
@@ -192,11 +200,11 @@ namespace KronosVulkanJunk
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;
 		std::vector<VkImageView> m_SwapChainImageViews;
-		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
+		std::vector<VkFramebuffer> m_SwapChainFramebuffers;*/
 
 		VkSurfaceKHR m_Surface;
 
-		VkRenderPass m_RenderPass;
+		/*VkRenderPass m_RenderPass;
 		VkDescriptorSetLayout m_DescriptorSetLayout;
 		VkPipelineLayout m_PipelineLayout;
 		VkPipeline m_GraphicsPipeline;
@@ -247,8 +255,7 @@ namespace KronosVulkanJunk
 
 		VkImage m_DepthImage;
 		VkDeviceMemory m_DepthImageMemory;
-		VkImageView m_DepthImageView;
-
+		VkImageView m_DepthImageView;*/
 	};
 }
 
@@ -259,12 +266,27 @@ namespace KronosVulkanJunk
 	Application::Application(Kronos::Ref<Kronos::Window> window)
 		: m_Window(window)
 	{
-		CreateInstance();
-		SetupDebugMessenger();
-		CreateSurface();
-		SelectPhysicalDevice();
-		CreateLogicalDevice();
-		CreateSwapChain();
+		std::unordered_map<const char*, bool> requestedInstanceExtensions = { {"VK_KHR_surface"}, {"VK_KHR_win32_surface", true}, {VK_EXT_DEBUG_UTILS_EXTENSION_NAME, true}};
+		std::unordered_map<const char*, bool> requestedInstanceLayers = { {"VK_LAYER_KHRONOS_validation", true}};
+		m_Instance = Kronos::CreateScope<Kronos::VulkanInstance>("Application Name", requestedInstanceExtensions, requestedInstanceLayers);
+
+		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
+		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		surfaceCreateInfo.hwnd = m_Window->GetHWND_TMP();
+		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+		KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(m_Instance->GetHandle(), &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
+
+		// Choose a physical device
+		uint32_t physicalDeviceCount = 0;
+		vkEnumeratePhysicalDevices(m_Instance->GetHandle(), &physicalDeviceCount, nullptr);
+		KRONOS_CORE_ASSERT(physicalDeviceCount > 0, "Failed to find physical devices with Vulkan support.");
+		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+		vkEnumeratePhysicalDevices(m_Instance->GetHandle(), &physicalDeviceCount, physicalDevices.data());
+
+		m_PhysicalDevice = Kronos::CreateScope<Kronos::VulkanPhysicalDevice>(*m_Instance, physicalDevices[0]);
+		m_Device = Kronos::CreateScope<Kronos::VulkanDevice>(*m_PhysicalDevice, m_Surface);
+
+		/*CreateSwapChain();
 		CreateImageViews();
 		CreateRenderPass();
 		CreateDescriptorSetLayout();
@@ -281,12 +303,12 @@ namespace KronosVulkanJunk
 		CreateDescriptorPool();
 		CreateDescriptorSets();
 		CreateCommandBuffers();
-		CreateSyncObjects();
+		CreateSyncObjects();*/
 	}
 
 	Application::~Application()
 	{
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+		/*for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroySemaphore(m_Device, m_RenderFinishedSemaphores[i], nullptr);
 			vkDestroySemaphore(m_Device, m_ImageAvailableSemaphores[i], nullptr);
 		}
@@ -332,16 +354,16 @@ namespace KronosVulkanJunk
 		vkDestroyDevice(m_Device, nullptr);
 
 		if (enableValidationLayers) {
-			DestroyDebugUtilsMessengerEXT(m_VulkanInstance, m_DebugMessenger, nullptr);
+			DestroyDebugUtilsMessengerEXT(m_Instance.GetHandle(), m_DebugMessenger, nullptr);
 		}
 
-		vkDestroySurfaceKHR(m_VulkanInstance, m_Surface, nullptr);
-		vkDestroyInstance(m_VulkanInstance, nullptr);
+		vkDestroySurfaceKHR(m_Instance.GetHandle(), m_Surface, nullptr);
+		vkDestroyInstance(m_Instance.GetHandle(), nullptr);*/
 	}
 
 	void Application::Render()
 	{
-		// Draw frame
+		/*// Draw frame
 		vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
@@ -390,10 +412,10 @@ namespace KronosVulkanJunk
 
 		vkQueuePresentKHR(m_PresentQueue, &presentInfo);
 
-		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;*/
 	}
 
-	void Application::CreateInstance()
+	/*void Application::CreateInstance()
 	{
 		if (enableValidationLayers && !CheckValidationLayerSupport()) {
 			throw std::runtime_error("validation layers requested, but not available!");
@@ -429,7 +451,7 @@ namespace KronosVulkanJunk
 			createInfo.pNext = nullptr;
 		}
 
-		if (vkCreateInstance(&createInfo, nullptr, &m_VulkanInstance) != VK_SUCCESS) {
+		if (vkCreateInstance(&createInfo, nullptr, &m_Instance.GetHandle()) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create instance!");
 		}
 	}
@@ -441,7 +463,7 @@ namespace KronosVulkanJunk
 		VkDebugUtilsMessengerCreateInfoEXT createInfo;
 		PopulateDebugMessengerCreateInfo(createInfo);
 
-		if (CreateDebugUtilsMessengerEXT(m_VulkanInstance, &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS) {
+		if (CreateDebugUtilsMessengerEXT(m_Instance.GetHandle(), &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS) {
 			throw std::runtime_error("failed to set up debug messenger!");
 		}
 	}
@@ -453,36 +475,15 @@ namespace KronosVulkanJunk
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.hwnd = m_Window->GetHWND_TMP();
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-		KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(m_VulkanInstance, &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
-	}
+		KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(m_Instance.GetHandle(), &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
+	}*/
 
 	void Application::SelectPhysicalDevice()
 	{
-		uint32_t deviceCount = 0;
-		vkEnumeratePhysicalDevices(m_VulkanInstance, &deviceCount, nullptr);
-
-		if (deviceCount == 0) {
-			std::cout << "Failed to find GPUs with Vulkan support" << std::endl;
-			return;
-		}
-
-		std::vector<VkPhysicalDevice> devices(deviceCount);
-		vkEnumeratePhysicalDevices(m_VulkanInstance, &deviceCount, devices.data());
-
-		for (const auto& device : devices) {
-			if (IsDeviceSuitable(device)) {
-				m_PhysicalDevice = device;
-				break;
-			}
-		}
-
-		if (m_PhysicalDevice == VK_NULL_HANDLE) {
-			std::cout << "Failed to find a suitable GPU!" << std::endl;
-			return;
-		}
+		
 	}
 
-	void Application::CreateLogicalDevice()
+	/*void Application::CreateLogicalDevice()
 	{
 		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
 
@@ -1695,5 +1696,5 @@ namespace KronosVulkanJunk
 
 		file.close();
 		return buffer;
-	}
+	}*/
 }

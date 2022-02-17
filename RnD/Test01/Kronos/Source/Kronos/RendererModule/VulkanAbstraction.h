@@ -41,7 +41,7 @@ namespace Kronos
 	will call the pointer version and break during runtime), it makes sense from a maintainability perspective to
 	use references where an object MUST be present, though it is a shame to lose the syntactic clarity.
 	*/
-	class VulkanPhysicalDevice
+	/*class VulkanPhysicalDevice
 	{
 		friend class VulkanInstance;
 
@@ -248,7 +248,7 @@ namespace Kronos
 	
 		VulkanInstance* m_Instance;
 		VulkanPhysicalDevice* m_PhysicalDevice;
-	};
+	};*/
 
 	/*class VulkanSwapchain
 	{
