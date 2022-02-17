@@ -266,8 +266,18 @@ namespace KronosVulkanJunk
 	Application::Application(Kronos::Ref<Kronos::Window> window)
 		: m_Window(window)
 	{
-		std::unordered_map<const char*, bool> requestedInstanceExtensions = { {"VK_KHR_surface"}, {"VK_KHR_win32_surface", true}, {VK_EXT_DEBUG_UTILS_EXTENSION_NAME, true}};
-		std::unordered_map<const char*, bool> requestedInstanceLayers = { {"VK_LAYER_KHRONOS_validation", true}};
+		std::unordered_map<const char*, bool> requestedInstanceExtensions =
+		{
+			{"VK_KHR_surface", true},
+			{"VK_KHR_win32_surface", true},
+			{VK_EXT_DEBUG_UTILS_EXTENSION_NAME, true}
+		};
+
+		std::unordered_map<const char*, bool> requestedInstanceLayers =
+		{
+			{"VK_LAYER_KHRONOS_validation", true}
+		};
+
 		m_Instance = Kronos::CreateScope<Kronos::VulkanInstance>("Application Name", requestedInstanceExtensions, requestedInstanceLayers);
 
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};

@@ -11,18 +11,18 @@
 
 namespace Kronos
 {
-    class VulkanInstance
-    {
-    public:
-        VulkanInstance(const std::string &applicationName,
-                       const std::unordered_map<const char *, bool> &requestedExtensions = {},
-                       const std::unordered_map<const char *, bool> &requestedLayers = {}
-                       /*TODO: bool headless = false */)
-        {
+	class VulkanInstance
+	{
+	public:
+		VulkanInstance(const std::string& applicationName,
+			const std::unordered_map<const char*, bool>& requestedExtensions = {},
+			const std::unordered_map<const char*, bool>& requestedLayers = {}
+		/*TODO: bool headless = false */)
+		{
 
-            bool debug = true;
+			bool debug = true;
 
-            VkApplicationInfo applicationInfo{};
+			VkApplicationInfo applicationInfo{};
 			applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 			applicationInfo.pNext = nullptr;
 			applicationInfo.pApplicationName = "Kronos Application";
@@ -32,22 +32,39 @@ namespace Kronos
 			applicationInfo.apiVersion = VK_API_VERSION_1_0;
 
 			uint32_t availableExtensionsCount;
-	        vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionsCount, nullptr);
-        	std::vector<VkExtensionProperties> availableExtensions(availableExtensionsCount);
-	        vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionsCount, availableExtensions.data());
+			vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionsCount, nullptr);
+			std::vector<VkExtensionProperties> availableExtensions(availableExtensionsCount);
+			vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionsCount, availableExtensions.data());
 
 			std::vector<const char*> enabledExtensions = {};
 			for (const std::pair<const char*, bool>& requestedExtension : requestedExtensions)
 			{
-				if (std::find(availableExtensions.begin(), availableExtensions.end(), requestedExtension.first) != availableExtensions.end())
+				bool available = false;
+
+				for (const VkExtensionProperties& availableExtensionProperties : availableExtensions)
+				{
+					if (strcmp(availableExtensionProperties.extensionName, requestedExtension.first))
+					{
+						available = true;
+						break;
+					}
+				}
+
+				if (available)
 				{
 					Log::Trace("Enabling extension: '{0}'"); // TODO: Log name
 					enabledExtensions.push_back(requestedExtension.first);
 				}
 				else
 				{
-					if (!requestedExtension.second) { Log::Trace("Failed to enable optional extenstion, the extention was not available: '{0}'"); } // TODO: Log name
-					else { KRONOS_CORE_ASSERT(false, "Failed to enable required extenstion, the extention was not available: '{0}'"); } // TODO: Log name
+					if (!requestedExtension.second)
+					{
+						Log::Trace("Failed to enable optional extenstion, the extention was not available: '{0}'"); // TODO: Log name
+					}
+					else
+					{
+						KRONOS_CORE_ASSERT(false, "Failed to enable required extenstion, the extention was not available: '{0}'"); // TODO: Log name
+					}
 				}
 			}
 
@@ -59,15 +76,32 @@ namespace Kronos
 			std::vector<const char*> enabledLayers = {};
 			for (const std::pair<const char*, bool>& requestedLayer : requestedLayers)
 			{
-				if (std::find(requestedLayers.begin(), requestedLayers.end(), requestedLayer.first) != requestedLayers.end())
+				bool available = false;
+
+				for (const VkLayerProperties& availableLayerProperties : availableLayers)
+				{
+					if (strcmp(availableLayerProperties.layerName, requestedLayer.first))
+					{
+						available = true;
+						break;
+					}
+				}
+
+				if (available)
 				{
 					Log::Trace("Enabling layer: '{0}'"); // TODO: Log name
 					enabledLayers.push_back(requestedLayer.first);
 				}
 				else
 				{
-					if (!requestedLayer.second) { Log::Trace("Failed to enable optional layer, the layer was not available: '{0}'"); } // TODO: Log name
-					else { KRONOS_CORE_ASSERT(false, "Failed to enable required layer, the layer was not available: '{0}'"); } // TODO: Log name
+					if (!requestedLayer.second)
+					{
+						Log::Trace("Failed to enable optional layer, the layer was not available: '{0}'");// TODO: Log name
+					}
+					else
+					{
+						KRONOS_CORE_ASSERT(false, "Failed to enable required layer, the layer was not available: '{0}'");// TODO: Log name
+					}
 				}
 			}
 
@@ -94,24 +128,24 @@ namespace Kronos
 				KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr != nullptr, "Failed to get 'vkCreateDebugUtilsMessengerEXT' proc address!");
 				KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr(m_Instance, &debugUtilsMessengerCreateInfo, nullptr, &m_DebugMessenger) == VK_SUCCESS, "Failed to set up debug messenger!");
 			}
-        }
-	 
-        VulkanInstance(const VulkanInstance &) = delete;
-	    VulkanInstance(VulkanInstance &&) = delete;
-    	VulkanInstance &operator=(const VulkanInstance &) = delete;
-	    VulkanInstance &operator=(VulkanInstance &&) = delete;
+		}
+
+		VulkanInstance(const VulkanInstance&) = delete;
+		VulkanInstance(VulkanInstance&&) = delete;
+		VulkanInstance& operator=(const VulkanInstance&) = delete;
+		VulkanInstance& operator=(VulkanInstance&&) = delete;
 
 		VkInstance GetHandle() const { return m_Instance; };
 
-    private:
-        static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+	private:
+		static VKAPI_ATTR VkBool32 VKAPI_CALL DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 		{
-		    std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
-		    return VK_FALSE;
-    	}
+			std::cout << "Validation layer: " << pCallbackData->pMessage << std::endl;
+			return VK_FALSE;
+		}
 
-    private:
-        VkInstance m_Instance;
+	private:
+		VkInstance m_Instance;
 		VkDebugUtilsMessengerEXT m_DebugMessenger;
-    };
+	};
 }
