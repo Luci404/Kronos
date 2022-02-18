@@ -20,15 +20,17 @@ namespace Kronos
         {
             uint32_t queueFamilyPropertiesCount = m_PhysicalDevice.GetQueueFamilyProperties().size();
             std::vector<VkDeviceQueueCreateInfo> queueCreateInfos(queueFamilyPropertiesCount, { VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO });
+			std::vector<std::vector<float>> queuePriorities(queueFamilyPropertiesCount);
 
-			const float defaultQueuePriorities = 0.5f;
 			for (uint32_t queueFamilyIndex = 0U; queueFamilyIndex < queueFamilyPropertiesCount; ++queueFamilyIndex)
 			{
 				const VkQueueFamilyProperties& queueFamilyProperty = m_PhysicalDevice.GetQueueFamilyProperties()[queueFamilyIndex];
+				queuePriorities[queueFamilyIndex].resize(queueFamilyProperty.queueCount, 0.5f);
+
 				VkDeviceQueueCreateInfo& queueCreateInfo = queueCreateInfos[queueFamilyIndex];
 				queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
 				queueCreateInfo.queueCount = queueFamilyProperty.queueCount;
-				queueCreateInfo.pQueuePriorities = &defaultQueuePriorities;
+				queueCreateInfo.pQueuePriorities = queuePriorities[queueFamilyIndex].data();
 			}
 
 			VkPhysicalDeviceFeatures deviceFeatures{};
