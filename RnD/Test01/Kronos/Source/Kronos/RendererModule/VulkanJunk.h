@@ -266,35 +266,29 @@ namespace KronosVulkanJunk
 	Application::Application(Kronos::Ref<Kronos::Window> window)
 		: m_Window(window)
 	{
-		std::unordered_map<const char*, bool> requestedInstanceExtensions =
-		{
-			{"VK_KHR_surface", true},
-			{"VK_KHR_win32_surface", true},
-			{VK_EXT_DEBUG_UTILS_EXTENSION_NAME, true}
-		};
-
-		std::unordered_map<const char*, bool> requestedInstanceLayers =
-		{
-			{"VK_LAYER_KHRONOS_validation", true}
-		};
-
+		// Create an instance
+		std::unordered_map<const char*, bool> requestedInstanceExtensions = { {"VK_KHR_surface", true}, {"VK_KHR_win32_surface", true}, {VK_EXT_DEBUG_UTILS_EXTENSION_NAME, true} };
+		std::unordered_map<const char*, bool> requestedInstanceLayers = { {"VK_LAYER_KHRONOS_validation", true} };
 		m_Instance = Kronos::CreateScope<Kronos::VulkanInstance>("Application Name", requestedInstanceExtensions, requestedInstanceLayers);
 
+		// Create a surface
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.hwnd = m_Window->GetHWND_TMP();
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 		KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(m_Instance->GetHandle(), &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
 
-		// Choose a physical device
+		// Choose and create a physical device
 		uint32_t physicalDeviceCount = 0;
 		vkEnumeratePhysicalDevices(m_Instance->GetHandle(), &physicalDeviceCount, nullptr);
 		KRONOS_CORE_ASSERT(physicalDeviceCount > 0, "Failed to find physical devices with Vulkan support.");
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
 		vkEnumeratePhysicalDevices(m_Instance->GetHandle(), &physicalDeviceCount, physicalDevices.data());
-
 		m_PhysicalDevice = Kronos::CreateScope<Kronos::VulkanPhysicalDevice>(*m_Instance, physicalDevices[0]);
-		m_Device = Kronos::CreateScope<Kronos::VulkanDevice>(*m_PhysicalDevice, m_Surface);
+
+		// Create a logical device
+		std::unordered_map<const char*, bool> requestedDeviceExtensions = { {VK_KHR_SWAPCHAIN_EXTENSION_NAME, true} };
+		m_Device = Kronos::CreateScope<Kronos::VulkanDevice>(*m_PhysicalDevice, m_Surface, requestedDeviceExtensions);
 
 		/*CreateSwapChain();
 		CreateImageViews();

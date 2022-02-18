@@ -15,7 +15,7 @@ namespace Kronos
     class VulkanDevice
     {
     public:
-        VulkanDevice(VulkanPhysicalDevice& physicalDevice, VkSurfaceKHR surface, std::unordered_map<const char *, bool> requestedExtensions = {})
+        VulkanDevice(VulkanPhysicalDevice& physicalDevice, VkSurfaceKHR surface, const std::unordered_map<const char *, bool>& requestedExtensions = {})
             : m_PhysicalDevice(physicalDevice)
         {
             uint32_t queueFamilyPropertiesCount = m_PhysicalDevice.GetQueueFamilyProperties().size();
@@ -34,18 +34,44 @@ namespace Kronos
 			VkPhysicalDeviceFeatures deviceFeatures{};
 			deviceFeatures.samplerAnisotropy = VK_TRUE;
 
-			const std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-			const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
+			uint32_t availableExtensionsCount;
+			vkEnumerateDeviceExtensionProperties(m_PhysicalDevice.GetHandle(), nullptr, &availableExtensionsCount, nullptr);
+			std::vector<VkExtensionProperties> availableExtensions(availableExtensionsCount);
+			vkEnumerateDeviceExtensionProperties(m_PhysicalDevice.GetHandle(), nullptr, &availableExtensionsCount, availableExtensions.data());
+
+			std::vector<const char*> enabledExtensions = {};
+			for (const std::pair<const char*, bool>& requestedExtension : requestedExtensions)
+			{
+				if (std::find_if(availableExtensions.begin(), availableExtensions.end(), [requestedExtension](auto& device_extension) {
+					return std::strcmp(device_extension.extensionName, requestedExtension.first) == 0;
+					}) != availableExtensions.end())
+				{
+					Log::Trace("Enabling extension: '{0}'"); // TODO: Log name
+					enabledExtensions.push_back(requestedExtension.first);
+				}
+				else
+				{
+					if (!requestedExtension.second)
+					{
+						Log::Trace("Failed to enable optional extension, the extension was not available: '{0}'");// TODO: Log name
+					}
+					else
+					{
+						KRONOS_CORE_ASSERT(false, "Failed to enable required extension, the extension was not available: '{0}'");// TODO: Log name
+					}
+				}
+			}
 
 			VkDeviceCreateInfo deviceCreateInfo{};
 			deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 			deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 			deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 			deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-			deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-			deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+			deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
+			deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
 			// TODO: When to enable?
+			const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 			deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 			deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
 

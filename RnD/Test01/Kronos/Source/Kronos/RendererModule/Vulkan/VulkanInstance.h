@@ -39,18 +39,9 @@ namespace Kronos
 			std::vector<const char*> enabledExtensions = {};
 			for (const std::pair<const char*, bool>& requestedExtension : requestedExtensions)
 			{
-				bool available = false;
-
-				for (const VkExtensionProperties& availableExtensionProperties : availableExtensions)
-				{
-					if (strcmp(availableExtensionProperties.extensionName, requestedExtension.first))
-					{
-						available = true;
-						break;
-					}
-				}
-
-				if (available)
+				if (std::find_if(availableExtensions.begin(), availableExtensions.end(), [requestedExtension](auto& device_extension) {
+					return std::strcmp(device_extension.extensionName, requestedExtension.first) == 0;
+					}) != availableExtensions.end())
 				{
 					Log::Trace("Enabling extension: '{0}'"); // TODO: Log name
 					enabledExtensions.push_back(requestedExtension.first);
@@ -76,18 +67,9 @@ namespace Kronos
 			std::vector<const char*> enabledLayers = {};
 			for (const std::pair<const char*, bool>& requestedLayer : requestedLayers)
 			{
-				bool available = false;
-
-				for (const VkLayerProperties& availableLayerProperties : availableLayers)
-				{
-					if (strcmp(availableLayerProperties.layerName, requestedLayer.first))
-					{
-						available = true;
-						break;
-					}
-				}
-
-				if (available)
+				if (std::find_if(availableLayers.begin(), availableLayers.end(), [requestedLayer](auto& device_extension) {
+					return std::strcmp(device_extension.layerName, requestedLayer.first) == 0;
+					}) != availableLayers.end())
 				{
 					Log::Trace("Enabling layer: '{0}'"); // TODO: Log name
 					enabledLayers.push_back(requestedLayer.first);
