@@ -100,11 +100,6 @@ namespace KronosVulkanJunk
 		void Render();
 
 	private:
-		//void CreateInstance(); // DONE
-		//void SetupDebugMessenger(); // DONE
-		//void CreateSurface();
-		void SelectPhysicalDevice();
-		/*void CreateLogicalDevice();
 		void CreateSwapChain();
 		void CreateImageViews();
 		void CreateRenderPass();
@@ -164,7 +159,7 @@ namespace KronosVulkanJunk
 		VkShaderModule CreateShaderModule(const std::vector<char>& code);
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
-		std::vector<char> ReadFile(const std::string& filepath);*/
+		std::vector<char> ReadFile(const std::string& filepath);
 
 	private:
 		Kronos::Ref<Kronos::Window> m_Window;
@@ -186,12 +181,7 @@ namespace KronosVulkanJunk
 		Kronos::Scope<Kronos::VulkanInstance> m_Instance;
 		Kronos::Scope<Kronos::VulkanPhysicalDevice> m_PhysicalDevice;
 		Kronos::Scope<Kronos::VulkanDevice> m_Device;
-		VkPhysicalDevice m_PhysicalDevice2 = VK_NULL_HANDLE;
 
-		/*VkInstance m_VulkanInstance();
-		VkDebugUtilsMessengerEXT m_DebugMessenger;
-		VkPhysicalDevice m_PhysicalDevice2 = VK_NULL_HANDLE;
-		VkDevice m_Device;
 		VkQueue m_GraphicsQueue;
 		VkQueue m_PresentQueue;
 
@@ -200,11 +190,11 @@ namespace KronosVulkanJunk
 		VkFormat m_SwapChainImageFormat;
 		VkExtent2D m_SwapChainExtent;
 		std::vector<VkImageView> m_SwapChainImageViews;
-		std::vector<VkFramebuffer> m_SwapChainFramebuffers;*/
+		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
 		VkSurfaceKHR m_Surface;
 
-		/*VkRenderPass m_RenderPass;
+		VkRenderPass m_RenderPass;
 		VkDescriptorSetLayout m_DescriptorSetLayout;
 		VkPipelineLayout m_PipelineLayout;
 		VkPipeline m_GraphicsPipeline;
@@ -255,7 +245,7 @@ namespace KronosVulkanJunk
 
 		VkImage m_DepthImage;
 		VkDeviceMemory m_DepthImageMemory;
-		VkImageView m_DepthImageView;*/
+		VkImageView m_DepthImageView;
 	};
 }
 
@@ -290,7 +280,7 @@ namespace KronosVulkanJunk
 		std::unordered_map<const char*, bool> requestedDeviceExtensions = { {VK_KHR_SWAPCHAIN_EXTENSION_NAME, true} };
 		m_Device = Kronos::CreateScope<Kronos::VulkanDevice>(*m_PhysicalDevice, m_Surface, requestedDeviceExtensions);
 
-		/*CreateSwapChain();
+		CreateSwapChain();
 		CreateImageViews();
 		CreateRenderPass();
 		CreateDescriptorSetLayout();
@@ -307,74 +297,74 @@ namespace KronosVulkanJunk
 		CreateDescriptorPool();
 		CreateDescriptorSets();
 		CreateCommandBuffers();
-		CreateSyncObjects();*/
+		CreateSyncObjects();
 	}
 
 	Application::~Application()
 	{
-		/*for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-			vkDestroySemaphore(m_Device, m_RenderFinishedSemaphores[i], nullptr);
-			vkDestroySemaphore(m_Device, m_ImageAvailableSemaphores[i], nullptr);
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			vkDestroySemaphore(m_Device->GetHandle(), m_RenderFinishedSemaphores[i], nullptr);
+			vkDestroySemaphore(m_Device->GetHandle(), m_ImageAvailableSemaphores[i], nullptr);
 		}
 
-		vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+		vkDestroyCommandPool(m_Device->GetHandle(), m_CommandPool, nullptr);
 
 		for (auto framebuffer : m_SwapChainFramebuffers) {
-			vkDestroyFramebuffer(m_Device, framebuffer, nullptr);
+			vkDestroyFramebuffer(m_Device->GetHandle(), framebuffer, nullptr);
 		}
 
-		vkDestroySampler(m_Device, m_TextureSampler, nullptr);
-		vkDestroyImageView(m_Device, m_TextureImageView, nullptr);
+		vkDestroySampler(m_Device->GetHandle(), m_TextureSampler, nullptr);
+		vkDestroyImageView(m_Device->GetHandle(), m_TextureImageView, nullptr);
 
-		vkDestroyImage(m_Device, m_TextureImage, nullptr);
-		vkFreeMemory(m_Device, m_TextureImageMemory, nullptr);
+		vkDestroyImage(m_Device->GetHandle(), m_TextureImage, nullptr);
+		vkFreeMemory(m_Device->GetHandle(), m_TextureImageMemory, nullptr);
 
-		vkDestroyDescriptorSetLayout(m_Device, m_DescriptorSetLayout, nullptr);
+		vkDestroyDescriptorSetLayout(m_Device->GetHandle(), m_DescriptorSetLayout, nullptr);
 
-		vkDestroyRenderPass(m_Device, m_RenderPass, nullptr);
-		vkDestroyPipeline(m_Device, m_GraphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(m_Device, m_PipelineLayout, nullptr);
+		vkDestroyRenderPass(m_Device->GetHandle(), m_RenderPass, nullptr);
+		vkDestroyPipeline(m_Device->GetHandle(), m_GraphicsPipeline, nullptr);
+		vkDestroyPipelineLayout(m_Device->GetHandle(), m_PipelineLayout, nullptr);
 
 		for (auto imageView : m_SwapChainImageViews) {
-			vkDestroyImageView(m_Device, imageView, nullptr);
+			vkDestroyImageView(m_Device->GetHandle(), imageView, nullptr);
 		}
 
-		vkDestroyDescriptorPool(m_Device, m_DescriptorPool, nullptr);
+		vkDestroyDescriptorPool(m_Device->GetHandle(), m_DescriptorPool, nullptr);
 
-		vkDestroySwapchainKHR(m_Device, m_SwapChain, nullptr);
+		vkDestroySwapchainKHR(m_Device->GetHandle(), m_SwapChain, nullptr);
 
 		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
-			vkDestroyBuffer(m_Device, m_UniformBuffers[i], nullptr);
-			vkFreeMemory(m_Device, m_UniformBuffersMemory[i], nullptr);
+			vkDestroyBuffer(m_Device->GetHandle(), m_UniformBuffers[i], nullptr);
+			vkFreeMemory(m_Device->GetHandle(), m_UniformBuffersMemory[i], nullptr);
 		}
-		vkDestroyDescriptorPool(m_Device, m_DescriptorPool, nullptr);
+		vkDestroyDescriptorPool(m_Device->GetHandle(), m_DescriptorPool, nullptr);
 
-		vkDestroyBuffer(m_Device, m_IndexBuffer, nullptr);
-		vkFreeMemory(m_Device, m_IndexBufferMemory, nullptr);
+		vkDestroyBuffer(m_Device->GetHandle(), m_IndexBuffer, nullptr);
+		vkFreeMemory(m_Device->GetHandle(), m_IndexBufferMemory, nullptr);
 
-		vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
-		vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
+		vkDestroyBuffer(m_Device->GetHandle(), m_VertexBuffer, nullptr);
+		vkFreeMemory(m_Device->GetHandle(), m_VertexBufferMemory, nullptr);
 
-		vkDestroyDevice(m_Device, nullptr);
+		vkDestroyDevice(m_Device->GetHandle(), nullptr);
 
 		if (enableValidationLayers) {
-			DestroyDebugUtilsMessengerEXT(m_Instance.GetHandle(), m_DebugMessenger, nullptr);
+			//DestroyDebugUtilsMessengerEXT(m_Instance->GetHandle(), m_DebugMessenger, nullptr);
 		}
 
-		vkDestroySurfaceKHR(m_Instance.GetHandle(), m_Surface, nullptr);
-		vkDestroyInstance(m_Instance.GetHandle(), nullptr);*/
+		vkDestroySurfaceKHR(m_Instance->GetHandle(), m_Surface, nullptr);
+		vkDestroyInstance(m_Instance->GetHandle(), nullptr);
 	}
 
 	void Application::Render()
 	{
-		/*// Draw frame
-		vkWaitForFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
+		// Draw frame
+		vkWaitForFences(m_Device->GetHandle(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
-		vkAcquireNextImageKHR(m_Device, m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+		vkAcquireNextImageKHR(m_Device->GetHandle(), m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
 		if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
-			vkWaitForFences(m_Device, 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
+			vkWaitForFences(m_Device->GetHandle(), 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
 		}
 		m_ImagesInFlight[imageIndex] = m_InFlightFences[m_CurrentFrame];
 
@@ -395,7 +385,7 @@ namespace KronosVulkanJunk
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemaphores;
 
-		vkResetFences(m_Device, 1, &m_InFlightFences[m_CurrentFrame]);
+		vkResetFences(m_Device->GetHandle(), 1, &m_InFlightFences[m_CurrentFrame]);
 
 		if (vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS) {
 			std::cout << "Failed to submit draw command buffer!" << std::endl;
@@ -416,128 +406,12 @@ namespace KronosVulkanJunk
 
 		vkQueuePresentKHR(m_PresentQueue, &presentInfo);
 
-		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;*/
-	}
-
-	/*void Application::CreateInstance()
-	{
-		if (enableValidationLayers && !CheckValidationLayerSupport()) {
-			throw std::runtime_error("validation layers requested, but not available!");
-		}
-
-		VkApplicationInfo appInfo{};
-		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-		appInfo.pApplicationName = "Hello Triangle";
-		appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.pEngineName = "No Engine";
-		appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-		appInfo.apiVersion = VK_API_VERSION_1_0;
-
-		VkInstanceCreateInfo createInfo{};
-		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		createInfo.pApplicationInfo = &appInfo;
-
-		auto extensions = GetRequiredExtensions();
-		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-		createInfo.ppEnabledExtensionNames = extensions.data();
-
-		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-		if (enableValidationLayers) {
-			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
-
-			PopulateDebugMessengerCreateInfo(debugCreateInfo);
-			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
-		}
-		else {
-			createInfo.enabledLayerCount = 0;
-
-			createInfo.pNext = nullptr;
-		}
-
-		if (vkCreateInstance(&createInfo, nullptr, &m_Instance.GetHandle()) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create instance!");
-		}
-	}
-
-	void Application::SetupDebugMessenger()
-	{
-		if (!enableValidationLayers) return;
-
-		VkDebugUtilsMessengerCreateInfoEXT createInfo;
-		PopulateDebugMessengerCreateInfo(createInfo);
-
-		if (CreateDebugUtilsMessengerEXT(m_Instance.GetHandle(), &createInfo, nullptr, &m_DebugMessenger) != VK_SUCCESS) {
-			throw std::runtime_error("failed to set up debug messenger!");
-		}
-	}
-
-	void Application::CreateSurface()
-	{
-		// Create window surface.
-		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo{};
-		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surfaceCreateInfo.hwnd = m_Window->GetHWND_TMP();
-		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-		KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(m_Instance.GetHandle(), &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
-	}*/
-
-	void Application::SelectPhysicalDevice()
-	{
-		
-	}
-
-	/*void Application::CreateLogicalDevice()
-	{
-		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
-
-		std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-		std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-		float queuePriority = 1.0f;
-		for (uint32_t queueFamily : uniqueQueueFamilies) {
-			VkDeviceQueueCreateInfo queueCreateInfo{};
-			queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			queueCreateInfo.queueFamilyIndex = queueFamily;
-			queueCreateInfo.queueCount = 1;
-			queueCreateInfo.pQueuePriorities = &queuePriority;
-			queueCreateInfos.push_back(queueCreateInfo);
-		}
-
-		VkPhysicalDeviceFeatures deviceFeatures{};
-		deviceFeatures.samplerAnisotropy = VK_TRUE;
-
-		VkDeviceCreateInfo deviceCreateInfo{};
-		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-		deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
-		deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
-
-		deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-
-		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-		if (enableValidationLayers) {
-			deviceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			deviceCreateInfo.ppEnabledLayerNames = validationLayers.data();
-		}
-		else {
-			deviceCreateInfo.enabledLayerCount = 0;
-		}
-
-		if (vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, nullptr, &m_Device) != VK_SUCCESS) {
-			std::cout << "Failed to create logical device!" << std::endl;
-			return;
-		}
-
-		vkGetDeviceQueue(m_Device, indices.graphicsFamily.value(), 0, &m_GraphicsQueue);
-		vkGetDeviceQueue(m_Device, indices.presentFamily.value(), 0, &m_PresentQueue);
+		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void Application::CreateSwapChain()
 	{
-		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice);
+		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice->GetHandle());
 
 		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
 		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
@@ -559,7 +433,7 @@ namespace KronosVulkanJunk
 		swapchainCreateInfo.imageArrayLayers = 1;
 		swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
+		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice->GetHandle());
 		uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
 		if (indices.graphicsFamily != indices.presentFamily) {
@@ -580,14 +454,14 @@ namespace KronosVulkanJunk
 
 		swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 
-		if (vkCreateSwapchainKHR(m_Device, &swapchainCreateInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
+		if (vkCreateSwapchainKHR(m_Device->GetHandle(), &swapchainCreateInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
 			std::cout << "Failed to create swap chain!" << std::endl;
 			return;
 		}
 
-		vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &imageCount, nullptr);
+		vkGetSwapchainImagesKHR(m_Device->GetHandle(), m_SwapChain, &imageCount, nullptr);
 		m_SwapChainImages.resize(imageCount);
-		vkGetSwapchainImagesKHR(m_Device, m_SwapChain, &imageCount, m_SwapChainImages.data());
+		vkGetSwapchainImagesKHR(m_Device->GetHandle(), m_SwapChain, &imageCount, m_SwapChainImages.data());
 
 		m_SwapChainImageFormat = surfaceFormat.format;
 		m_SwapChainExtent = extent;
@@ -656,7 +530,7 @@ namespace KronosVulkanJunk
 		renderPassInfo.dependencyCount = 1;
 		renderPassInfo.pDependencies = &dependency;
 
-		if (vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) {
+		if (vkCreateRenderPass(m_Device->GetHandle(), &renderPassInfo, nullptr, &m_RenderPass) != VK_SUCCESS) {
 			std::cout << "Failed to create render pass!" << std::endl;
 			return;
 		}
@@ -684,7 +558,7 @@ namespace KronosVulkanJunk
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
 		layoutInfo.pBindings = bindings.data();
 
-		if (vkCreateDescriptorSetLayout(m_Device, &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS) {
+		if (vkCreateDescriptorSetLayout(m_Device->GetHandle(), &layoutInfo, nullptr, &m_DescriptorSetLayout) != VK_SUCCESS) {
 			std::cout << "Failed to create descriptor set layout!" << std::endl;
 			return;
 		}
@@ -692,13 +566,13 @@ namespace KronosVulkanJunk
 
 	void Application::CreateCommandPool()
 	{
-		QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(m_PhysicalDevice);
+		QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(m_PhysicalDevice->GetHandle());
 		VkCommandPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 		poolInfo.flags = 0; // Optional
 
-		if (vkCreateCommandPool(m_Device, &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS) {
+		if (vkCreateCommandPool(m_Device->GetHandle(), &poolInfo, nullptr, &m_CommandPool) != VK_SUCCESS) {
 			std::cout << "Failed to create command pool!" << std::endl;
 			return;
 		}
@@ -832,7 +706,7 @@ namespace KronosVulkanJunk
 		pipelineLayoutInfo.setLayoutCount = 1;
 		pipelineLayoutInfo.pSetLayouts = &m_DescriptorSetLayout;
 
-		if (vkCreatePipelineLayout(m_Device, &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
+		if (vkCreatePipelineLayout(m_Device->GetHandle(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout) != VK_SUCCESS) {
 			std::cout << "Failed to create pipeline layout!" << std::endl;
 			return;
 		}
@@ -854,12 +728,12 @@ namespace KronosVulkanJunk
 		pipelineInfo.subpass = 0;
 		pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-		if (vkCreateGraphicsPipelines(m_Device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS) {
+		if (vkCreateGraphicsPipelines(m_Device->GetHandle(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_GraphicsPipeline) != VK_SUCCESS) {
 			throw std::runtime_error("Failed to create graphics pipeline!");
 		}
 
-		vkDestroyShaderModule(m_Device, fragShaderModule, nullptr);
-		vkDestroyShaderModule(m_Device, vertShaderModule, nullptr);
+		vkDestroyShaderModule(m_Device->GetHandle(), fragShaderModule, nullptr);
+		vkDestroyShaderModule(m_Device->GetHandle(), vertShaderModule, nullptr);
 	}
 
 	void Application::CreateFramebuffers()
@@ -881,7 +755,7 @@ namespace KronosVulkanJunk
 			framebufferInfo.height = m_SwapChainExtent.height;
 			framebufferInfo.layers = 1;
 
-			if (vkCreateFramebuffer(m_Device, &framebufferInfo, nullptr, &m_SwapChainFramebuffers[i]) != VK_SUCCESS) {
+			if (vkCreateFramebuffer(m_Device->GetHandle(), &framebufferInfo, nullptr, &m_SwapChainFramebuffers[i]) != VK_SUCCESS) {
 				std::cout << "Failed to create framebuffer!" << std::endl;
 				return;
 			}
@@ -899,7 +773,7 @@ namespace KronosVulkanJunk
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandBufferCount = (uint32_t)m_CommandBuffers.size();
 
-		if (vkAllocateCommandBuffers(m_Device, &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS) {
+		if (vkAllocateCommandBuffers(m_Device->GetHandle(), &allocInfo, m_CommandBuffers.data()) != VK_SUCCESS) {
 			std::cout << "Failed to allocate command buffers!" << std::endl;
 			return;
 		}
@@ -970,9 +844,9 @@ namespace KronosVulkanJunk
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			if (vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS ||
-				vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS ||
-				vkCreateFence(m_Device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS) {
+			if (vkCreateSemaphore(m_Device->GetHandle(), &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS ||
+				vkCreateSemaphore(m_Device->GetHandle(), &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS ||
+				vkCreateFence(m_Device->GetHandle(), &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS) {
 
 				std::cout << "Failed to create semaphores and/or fences!" << std::endl;
 				return;
@@ -995,9 +869,9 @@ namespace KronosVulkanJunk
 		CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 		void* data;
-		vkMapMemory(m_Device, stagingBufferMemory, 0, imageSize, 0, &data);
+		vkMapMemory(m_Device->GetHandle(), stagingBufferMemory, 0, imageSize, 0, &data);
 		memcpy(data, pixels, static_cast<size_t>(imageSize));
-		vkUnmapMemory(m_Device, stagingBufferMemory);
+		vkUnmapMemory(m_Device->GetHandle(), stagingBufferMemory);
 
 		stbi_image_free(pixels);
 
@@ -1007,8 +881,8 @@ namespace KronosVulkanJunk
 		CopyBufferToImage(stagingBuffer, m_TextureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 		TransitionImageLayout(m_TextureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-		vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-		vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+		vkDestroyBuffer(m_Device->GetHandle(), stagingBuffer, nullptr);
+		vkFreeMemory(m_Device->GetHandle(), stagingBufferMemory, nullptr);
 	}
 
 	void Application::CreateTextureImageView()
@@ -1018,7 +892,7 @@ namespace KronosVulkanJunk
 
 	void Application::CreateTextureSampler() {
 		VkPhysicalDeviceProperties properties{};
-		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &properties);
+		vkGetPhysicalDeviceProperties(m_PhysicalDevice->GetHandle(), &properties);
 
 		VkSamplerCreateInfo samplerInfo{};
 		samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -1036,7 +910,7 @@ namespace KronosVulkanJunk
 		samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
 		samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-		if (vkCreateSampler(m_Device, &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS) {
+		if (vkCreateSampler(m_Device->GetHandle(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create texture sampler!");
 		}
 	}
@@ -1050,16 +924,16 @@ namespace KronosVulkanJunk
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 		void* data;
-		vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(m_Device->GetHandle(), stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, m_Vertices.data(), (size_t)bufferSize);
-		vkUnmapMemory(m_Device, stagingBufferMemory);
+		vkUnmapMemory(m_Device->GetHandle(), stagingBufferMemory);
 
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_VertexBuffer, m_VertexBufferMemory);
 
 		CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
 
-		vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-		vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+		vkDestroyBuffer(m_Device->GetHandle(), stagingBuffer, nullptr);
+		vkFreeMemory(m_Device->GetHandle(), stagingBufferMemory, nullptr);
 	}
 
 	void Application::CreateIndexBuffers()
@@ -1071,16 +945,16 @@ namespace KronosVulkanJunk
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
 		void* data;
-		vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+		vkMapMemory(m_Device->GetHandle(), stagingBufferMemory, 0, bufferSize, 0, &data);
 		memcpy(data, m_Indices.data(), (size_t)bufferSize);
-		vkUnmapMemory(m_Device, stagingBufferMemory);
+		vkUnmapMemory(m_Device->GetHandle(), stagingBufferMemory);
 
 		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_IndexBuffer, m_IndexBufferMemory);
 
 		CopyBuffer(stagingBuffer, m_IndexBuffer, bufferSize);
 
-		vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
-		vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+		vkDestroyBuffer(m_Device->GetHandle(), stagingBuffer, nullptr);
+		vkFreeMemory(m_Device->GetHandle(), stagingBufferMemory, nullptr);
 	}
 
 	void Application::CreateUniformBuffers()
@@ -1109,7 +983,7 @@ namespace KronosVulkanJunk
 		poolInfo.pPoolSizes = poolSizes.data();
 		poolInfo.maxSets = static_cast<uint32_t>(m_SwapChainImages.size());
 
-		if (vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
+		if (vkCreateDescriptorPool(m_Device->GetHandle(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
 			std::cout << "Failed to create descriptor pool!" << std::endl;
 			return;
 		}
@@ -1125,7 +999,7 @@ namespace KronosVulkanJunk
 		allocInfo.pSetLayouts = layouts.data();
 
 		m_DescriptorSets.resize(m_SwapChainImages.size());
-		if (vkAllocateDescriptorSets(m_Device, &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS) {
+		if (vkAllocateDescriptorSets(m_Device->GetHandle(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate descriptor sets!");
 		}
 
@@ -1158,7 +1032,7 @@ namespace KronosVulkanJunk
 			descriptorWrites[1].descriptorCount = 1;
 			descriptorWrites[1].pImageInfo = &imageInfo;
 
-			vkUpdateDescriptorSets(m_Device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+			vkUpdateDescriptorSets(m_Device->GetHandle(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 		}
 	}
 
@@ -1176,9 +1050,9 @@ namespace KronosVulkanJunk
 		ubo.proj[1][1] *= -1;
 
 		void* data;
-		vkMapMemory(m_Device, m_UniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
+		vkMapMemory(m_Device->GetHandle(), m_UniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
 		memcpy(data, &ubo, sizeof(ubo));
-		vkUnmapMemory(m_Device, m_UniformBuffersMemory[currentImage]);
+		vkUnmapMemory(m_Device->GetHandle(), m_UniformBuffersMemory[currentImage]);
 	}
 
 	bool Application::CheckValidationLayerSupport() {
@@ -1273,7 +1147,7 @@ namespace KronosVulkanJunk
 	{
 		for (VkFormat format : candidates) {
 			VkFormatProperties props;
-			vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &props);
+			vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice->GetHandle(), format, &props);
 
 			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
 				return format;
@@ -1428,7 +1302,7 @@ namespace KronosVulkanJunk
 		allocInfo.commandBufferCount = 1;
 
 		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+		vkAllocateCommandBuffers(m_Device->GetHandle(), &allocInfo, &commandBuffer);
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1451,7 +1325,7 @@ namespace KronosVulkanJunk
 		vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 		vkQueueWaitIdle(m_GraphicsQueue);
 
-		vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(m_Device->GetHandle(), m_CommandPool, 1, &commandBuffer);
 	}
 
 	VkImageView Application::CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags)
@@ -1468,7 +1342,7 @@ namespace KronosVulkanJunk
 		viewInfo.subresourceRange.layerCount = 1;
 
 		VkImageView imageView;
-		if (vkCreateImageView(m_Device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+		if (vkCreateImageView(m_Device->GetHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create texture image view!");
 		}
 
@@ -1569,23 +1443,23 @@ namespace KronosVulkanJunk
 		imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
 		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateImage(m_Device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+		if (vkCreateImage(m_Device->GetHandle(), &imageInfo, nullptr, &image) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create image!");
 		}
 
 		VkMemoryRequirements memRequirements;
-		vkGetImageMemoryRequirements(m_Device, image, &memRequirements);
+		vkGetImageMemoryRequirements(m_Device->GetHandle(), image, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-		if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+		if (vkAllocateMemory(m_Device->GetHandle(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate image memory!");
 		}
 
-		vkBindImageMemory(m_Device, image, imageMemory, 0);
+		vkBindImageMemory(m_Device->GetHandle(), image, imageMemory, 0);
 	}
 
 	void Application::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -1596,25 +1470,25 @@ namespace KronosVulkanJunk
 		bufferInfo.usage = usage;
 		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateBuffer(m_Device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+		if (vkCreateBuffer(m_Device->GetHandle(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
 			std::cout << "Failed to create buffer!" << std::endl;
 			return;
 		}
 
 		VkMemoryRequirements memRequirements;
-		vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+		vkGetBufferMemoryRequirements(m_Device->GetHandle(), buffer, &memRequirements);
 
 		VkMemoryAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocInfo.allocationSize = memRequirements.size;
 		allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
 
-		if (vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
+		if (vkAllocateMemory(m_Device->GetHandle(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
 			std::cout << "Failed to allocate buffer memory!" << std::endl;
 			return;
 		}
 
-		vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+		vkBindBufferMemory(m_Device->GetHandle(), buffer, bufferMemory, 0);
 	}
 
 	void Application::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
@@ -1626,7 +1500,7 @@ namespace KronosVulkanJunk
 		allocInfo.commandBufferCount = 1;
 
 		VkCommandBuffer commandBuffer;
-		vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+		vkAllocateCommandBuffers(m_Device->GetHandle(), &allocInfo, &commandBuffer);
 
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1648,7 +1522,7 @@ namespace KronosVulkanJunk
 		vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
 		vkQueueWaitIdle(m_GraphicsQueue);
 
-		vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
+		vkFreeCommandBuffers(m_Device->GetHandle(), m_CommandPool, 1, &commandBuffer);
 	}
 
 	VkShaderModule Application::CreateShaderModule(const std::vector<char>& code)
@@ -1659,7 +1533,7 @@ namespace KronosVulkanJunk
 		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
 		VkShaderModule shaderModule;
-		if (vkCreateShaderModule(m_Device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+		if (vkCreateShaderModule(m_Device->GetHandle(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 			std::cout << "Failed to create shader module!" << std::endl;
 			return VK_NULL_HANDLE;
 		}
@@ -1670,7 +1544,7 @@ namespace KronosVulkanJunk
 	uint32_t Application::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 	{
 		VkPhysicalDeviceMemoryProperties memProperties;
-		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
+		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice->GetHandle(), &memProperties);
 
 		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
 			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
@@ -1700,5 +1574,5 @@ namespace KronosVulkanJunk
 
 		file.close();
 		return buffer;
-	}*/
+	}
 }
