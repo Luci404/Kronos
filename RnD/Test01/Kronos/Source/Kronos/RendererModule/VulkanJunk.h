@@ -3,7 +3,7 @@
 #include "Kronos/RendererModule/Vulkan/VulkanInstance.h"
 #include "Kronos/RendererModule/Vulkan/VulkanPhysicalDevice.h"
 #include "Kronos/RendererModule/Vulkan/VulkanDevice.h"
-
+#include "Kronos/RendererModule/Vulkan/VulkanQueue.h"
 
 #include "Kronos/WindowModule/WindowModule.h"
 #include "Kronos/Core/Memory.h"
@@ -182,6 +182,7 @@ namespace KronosVulkanJunk
 		Kronos::Scope<Kronos::VulkanPhysicalDevice> m_PhysicalDevice;
 		Kronos::Scope<Kronos::VulkanDevice> m_Device;
 
+		VkQueue m_Queue;
 		VkQueue m_GraphicsQueue;
 		VkQueue m_PresentQueue;
 
@@ -279,6 +280,10 @@ namespace KronosVulkanJunk
 		// Create a logical device
 		std::unordered_map<const char*, bool> requestedDeviceExtensions = { {VK_KHR_SWAPCHAIN_EXTENSION_NAME, true} };
 		m_Device = Kronos::CreateScope<Kronos::VulkanDevice>(*m_PhysicalDevice, m_Surface, requestedDeviceExtensions);
+
+		m_Queue = m_Device->GetQueueByFlags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0).GetHandle();
+		m_GraphicsQueue = m_Queue;
+		m_PresentQueue = m_Queue;
 
 		CreateSwapChain();
 		CreateImageViews();

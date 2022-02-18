@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Kronos/LoggingModule/LoggingModule.h"
 #include "Kronos/Core/Assert.h"
 
 #define VK_USE_PLATFORM_WIN32_KHR 
@@ -8,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_map>
 
 namespace Kronos
 {
