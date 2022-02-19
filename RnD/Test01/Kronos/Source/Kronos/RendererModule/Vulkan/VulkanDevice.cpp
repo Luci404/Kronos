@@ -22,18 +22,6 @@ namespace Kronos
 			queueCreateInfo.pQueuePriorities = queuePriorities[queueFamilyIndex].data();
 		}
 
-		m_Queues.resize(queueFamilyPropertiesCount);
-		for (uint32_t queueFamilyIndex = 0U; queueFamilyIndex < queueFamilyPropertiesCount; ++queueFamilyIndex)
-		{
-			const VkQueueFamilyProperties& queueFamilyProperty = m_PhysicalDevice.GetQueueFamilyProperties()[queueFamilyIndex];
-			VkBool32 supportsPresent = m_PhysicalDevice.SupportsPresent(surface, queueFamilyIndex);
-
-			for (uint32_t queueIndex = 0U; queueIndex < queueFamilyProperty.queueCount; ++queueIndex)
-			{
-				m_Queues[queueFamilyIndex].emplace_back(*this, queueFamilyIndex, queueFamilyProperty, supportsPresent, queueIndex);
-			}
-		}
-
 		VkPhysicalDeviceFeatures deviceFeatures{};
 		deviceFeatures.samplerAnisotropy = VK_TRUE;
 
@@ -81,6 +69,18 @@ namespace Kronos
 		if (vkCreateDevice(m_PhysicalDevice.GetHandle(), &deviceCreateInfo, nullptr, &m_Device) != VK_SUCCESS) {
 			std::cout << "Failed to create logical device!" << std::endl;
 			return;
+		}
+
+		m_Queues.resize(queueFamilyPropertiesCount);
+		for (uint32_t queueFamilyIndex = 0U; queueFamilyIndex < queueFamilyPropertiesCount; ++queueFamilyIndex)
+		{
+			const VkQueueFamilyProperties& queueFamilyProperty = m_PhysicalDevice.GetQueueFamilyProperties()[queueFamilyIndex];
+			VkBool32 supportsPresent = m_PhysicalDevice.SupportsPresent(surface, queueFamilyIndex);
+
+			for (uint32_t queueIndex = 0U; queueIndex < queueFamilyProperty.queueCount; ++queueIndex)
+			{
+				m_Queues[queueFamilyIndex].emplace_back(*this, queueFamilyIndex, queueFamilyProperty, supportsPresent, queueIndex);
+			}
 		}
 	}
 
