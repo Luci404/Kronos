@@ -294,9 +294,11 @@ namespace KronosVulkanJunk
 		m_SwapChainImageFormat = m_Swapchain->GetSurfaceFormat();
 		m_SwapChainExtent = m_Swapchain->GetExtent();
 
+		m_SwapChainImages = m_Swapchain->GetImages();
+
 		m_SwapChainImageViews.resize(m_Swapchain->GetImages().size());
-		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-			m_SwapChainImageViews[i] = CreateImageView(m_SwapChainImages[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		for (uint32_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
+			m_SwapChainImageViews[i] = CreateImageView(m_Swapchain->GetImages()[i], m_Swapchain->GetSurfaceFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
 		}
 
 		CreateRenderPass();
@@ -428,55 +430,7 @@ namespace KronosVulkanJunk
 
 	void Application::CreateSwapChain()
 	{
-		SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(m_PhysicalDevice->GetHandle());
-
-		VkSurfaceFormatKHR surfaceFormat = ChooseSwapSurfaceFormat(swapChainSupport.formats);
-		VkPresentModeKHR presentMode = ChooseSwapPresentMode(swapChainSupport.presentModes);
-		VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
-
-		uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-		if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
-			imageCount = swapChainSupport.capabilities.maxImageCount;
-		}
-
-		VkSwapchainCreateInfoKHR swapchainCreateInfo{};
-		swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		swapchainCreateInfo.surface = m_Surface;
-
-		swapchainCreateInfo.minImageCount = imageCount;
-		swapchainCreateInfo.imageFormat = surfaceFormat.format;
-		swapchainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
-		swapchainCreateInfo.imageExtent = extent;
-		swapchainCreateInfo.imageArrayLayers = 1;
-		swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice->GetHandle());
-		uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-		if (indices.graphicsFamily != indices.presentFamily) {
-			swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-			swapchainCreateInfo.queueFamilyIndexCount = 2;
-			swapchainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
-		}
-		else {
-			swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			swapchainCreateInfo.queueFamilyIndexCount = 0; // Optional
-			swapchainCreateInfo.pQueueFamilyIndices = nullptr; // Optional
-		}
-
-		swapchainCreateInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-		swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		swapchainCreateInfo.presentMode = presentMode;
-		swapchainCreateInfo.clipped = VK_TRUE;
-
-		swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-
-		if (vkCreateSwapchainKHR(m_Device->GetHandle(), &swapchainCreateInfo, nullptr, &m_SwapChain) != VK_SUCCESS) {
-			std::cout << "Failed to create swap chain!" << std::endl;
-			return;
-		}
-
-		vkGetSwapchainImagesKHR(m_Device->GetHandle(), m_SwapChain, &imageCount, nullptr);
+		/*kGetSwapchainImagesKHR(m_Device->GetHandle(), m_SwapChain, &imageCount, nullptr);
 		m_SwapChainImages.resize(imageCount);
 		vkGetSwapchainImagesKHR(m_Device->GetHandle(), m_SwapChain, &imageCount, m_SwapChainImages.data());
 
@@ -487,7 +441,7 @@ namespace KronosVulkanJunk
 
 		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
 			m_SwapChainImageViews[i] = CreateImageView(m_SwapChainImages[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-		}
+		}*/
 	}
 
 	void Application::CreateRenderPass()
