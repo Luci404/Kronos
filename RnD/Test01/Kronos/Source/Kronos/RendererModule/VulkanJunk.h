@@ -4,6 +4,7 @@
 #include "Kronos/RendererModule/Vulkan/VulkanPhysicalDevice.h"
 #include "Kronos/RendererModule/Vulkan/VulkanDevice.h"
 #include "Kronos/RendererModule/Vulkan/VulkanQueue.h"
+#include "Kronos/RendererModule/Vulkan/VulkanSwapchain.h"
 
 #include "Kronos/WindowModule/WindowModule.h"
 #include "Kronos/Core/Memory.h"
@@ -101,7 +102,6 @@ namespace KronosVulkanJunk
 
 	private:
 		void CreateSwapChain();
-		void CreateImageViews();
 		void CreateRenderPass();
 		void CreateDescriptorSetLayout();
 		void CreateGraphicsPipeline();
@@ -181,6 +181,7 @@ namespace KronosVulkanJunk
 		Kronos::Scope<Kronos::VulkanInstance> m_Instance;
 		Kronos::Scope<Kronos::VulkanPhysicalDevice> m_PhysicalDevice;
 		Kronos::Scope<Kronos::VulkanDevice> m_Device;
+		Kronos::Scope<Kronos::VulkanSwapchain> m_Swapchain;
 
 		VkQueue m_Queue;
 		VkQueue m_GraphicsQueue;
@@ -269,7 +270,7 @@ namespace KronosVulkanJunk
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 		KRONOS_CORE_ASSERT(vkCreateWin32SurfaceKHR(m_Instance->GetHandle(), &surfaceCreateInfo, nullptr, &m_Surface) == VK_SUCCESS, "Failed to create window surface!");
 
-		// Choose and create a physical device
+		// Choose and create a physical device	
 		uint32_t physicalDeviceCount = 0;
 		vkEnumeratePhysicalDevices(m_Instance->GetHandle(), &physicalDeviceCount, nullptr);
 		KRONOS_CORE_ASSERT(physicalDeviceCount > 0, "Failed to find physical devices with Vulkan support.");
@@ -285,8 +286,19 @@ namespace KronosVulkanJunk
 		m_GraphicsQueue = m_Queue;
 		m_PresentQueue = m_Queue;
 
-		CreateSwapChain();
-		CreateImageViews();
+		VkExtent2D surfaceExtent{ 720, 1280 };
+		m_Swapchain = Kronos::CreateScope<Kronos::VulkanSwapchain>(*m_Device, m_Surface, surfaceExtent);
+
+		m_SwapChain = m_Swapchain->GetHandle();
+
+		m_SwapChainImageFormat = m_Swapchain->GetSurfaceFormat();
+		m_SwapChainExtent = m_Swapchain->GetExtent();
+
+		m_SwapChainImageViews.resize(m_Swapchain->GetImages().size());
+		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
+			m_SwapChainImageViews[i] = CreateImageView(m_SwapChainImages[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+		}
+
 		CreateRenderPass();
 		CreateDescriptorSetLayout();
 		CreateGraphicsPipeline();
@@ -470,10 +482,7 @@ namespace KronosVulkanJunk
 
 		m_SwapChainImageFormat = surfaceFormat.format;
 		m_SwapChainExtent = extent;
-	}
 
-	void Application::CreateImageViews()
-	{
 		m_SwapChainImageViews.resize(m_SwapChainImages.size());
 
 		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {

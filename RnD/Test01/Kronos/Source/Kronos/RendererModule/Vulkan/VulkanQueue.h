@@ -26,7 +26,6 @@ namespace Kronos
 
 		VkResult Present(const VkPresentInfoKHR presentInfo) const;
 
-
 		const VulkanDevice& GetDevice() const { return m_Device; }
 		const VkQueue& GetHandle() const { return m_Handle; }
 		uint32_t GetFamilyIndex() const { return m_FamilyIndex; }

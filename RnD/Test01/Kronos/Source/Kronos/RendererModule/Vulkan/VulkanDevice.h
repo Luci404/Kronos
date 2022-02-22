@@ -30,6 +30,11 @@ namespace Kronos
 		const VulkanQueue& GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const;
 
 		const VulkanQueue& GetQueueByFlags(VkQueueFlags requiredQueueFlags, uint32_t queueIndex) const;
+
+		const VulkanPhysicalDevice& GetPhysicalDevice() { return m_PhysicalDevice; }
+
+
+
 		/*const VulkanQueue& GetQueueByPresent(uint32_t queueIndex) const
 		{
 			for (uint32_t queueFamilyIndex = 0U; queueFamilyIndex < m_Queues.size(); ++queueFamilyIndex)
