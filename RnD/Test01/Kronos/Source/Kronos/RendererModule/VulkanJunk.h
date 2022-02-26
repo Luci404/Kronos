@@ -101,16 +101,15 @@ namespace KronosVulkanJunk
 		void Render();
 
 	private:
-		void CreateSwapChain();
 		void CreateRenderPass();
 		void CreateDescriptorSetLayout();
 		void CreateGraphicsPipeline();
 		void CreateFramebuffers();
 		void CreateCommandPool();
 		void CreateDepthResources();
-		void CreateTextureImage();
+		/*void CreateTextureImage();
 		void CreateTextureImageView();
-		void CreateTextureSampler();
+		void CreateTextureSampler();*/
 		void CreateVertexBuffers();
 		void CreateIndexBuffers();
 		void CreateUniformBuffers();
@@ -187,11 +186,6 @@ namespace KronosVulkanJunk
 		VkQueue m_GraphicsQueue;
 		VkQueue m_PresentQueue;
 
-		std::vector<VkImage> m_SwapChainImages;
-		VkSwapchainKHR m_SwapChain;
-		VkFormat m_SwapChainImageFormat;
-		VkExtent2D m_SwapChainExtent;
-		std::vector<VkImageView> m_SwapChainImageViews;
 		std::vector<VkFramebuffer> m_SwapChainFramebuffers;
 
 		VkSurfaceKHR m_Surface;
@@ -289,27 +283,17 @@ namespace KronosVulkanJunk
 		VkExtent2D surfaceExtent{ 720, 1280 };
 		m_Swapchain = Kronos::CreateScope<Kronos::VulkanSwapchain>(*m_Device, m_Surface, surfaceExtent);
 
-		m_SwapChain = m_Swapchain->GetHandle();
-
-		m_SwapChainImageFormat = m_Swapchain->GetSurfaceFormat();
-		m_SwapChainExtent = m_Swapchain->GetExtent();
-
-		m_SwapChainImages = m_Swapchain->GetImages();
-
-		m_SwapChainImageViews.resize(m_Swapchain->GetImages().size());
-		for (uint32_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
-			m_SwapChainImageViews[i] = CreateImageView(m_Swapchain->GetImages()[i], m_Swapchain->GetSurfaceFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
-		}
-
 		CreateRenderPass();
 		CreateDescriptorSetLayout();
 		CreateGraphicsPipeline();
 		CreateCommandPool();
 		CreateDepthResources();
 		CreateFramebuffers();
-		CreateTextureImage();
+
+		/*CreateTextureImage();
 		CreateTextureImageView();
-		CreateTextureSampler();
+		CreateTextureSampler();*/
+
 		CreateVertexBuffers();
 		CreateIndexBuffers();
 		CreateUniformBuffers();
@@ -344,15 +328,15 @@ namespace KronosVulkanJunk
 		vkDestroyPipeline(m_Device->GetHandle(), m_GraphicsPipeline, nullptr);
 		vkDestroyPipelineLayout(m_Device->GetHandle(), m_PipelineLayout, nullptr);
 
-		for (auto imageView : m_SwapChainImageViews) {
+		/*for (auto imageView : m_SwapChainImageViews) {
 			vkDestroyImageView(m_Device->GetHandle(), imageView, nullptr);
-		}
+		}*/
 
 		vkDestroyDescriptorPool(m_Device->GetHandle(), m_DescriptorPool, nullptr);
 
-		vkDestroySwapchainKHR(m_Device->GetHandle(), m_SwapChain, nullptr);
+		vkDestroySwapchainKHR(m_Device->GetHandle(), m_Swapchain->GetHandle(), nullptr);
 
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+		for (size_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
 			vkDestroyBuffer(m_Device->GetHandle(), m_UniformBuffers[i], nullptr);
 			vkFreeMemory(m_Device->GetHandle(), m_UniformBuffersMemory[i], nullptr);
 		}
@@ -380,7 +364,7 @@ namespace KronosVulkanJunk
 		vkWaitForFences(m_Device->GetHandle(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
 		uint32_t imageIndex;
-		vkAcquireNextImageKHR(m_Device->GetHandle(), m_SwapChain, UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+		vkAcquireNextImageKHR(m_Device->GetHandle(), m_Swapchain->GetHandle(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
 
 		if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
 			vkWaitForFences(m_Device->GetHandle(), 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
@@ -417,7 +401,7 @@ namespace KronosVulkanJunk
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
 
-		VkSwapchainKHR swapChains[] = { m_SwapChain };
+		VkSwapchainKHR swapChains[] = { m_Swapchain->GetHandle() };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapChains;
 
@@ -426,22 +410,6 @@ namespace KronosVulkanJunk
 		vkQueuePresentKHR(m_PresentQueue, &presentInfo);
 
 		m_CurrentFrame = (m_CurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-	}
-
-	void Application::CreateSwapChain()
-	{
-		/*kGetSwapchainImagesKHR(m_Device->GetHandle(), m_SwapChain, &imageCount, nullptr);
-		m_SwapChainImages.resize(imageCount);
-		vkGetSwapchainImagesKHR(m_Device->GetHandle(), m_SwapChain, &imageCount, m_SwapChainImages.data());
-
-		m_SwapChainImageFormat = surfaceFormat.format;
-		m_SwapChainExtent = extent;
-
-		m_SwapChainImageViews.resize(m_SwapChainImages.size());
-
-		for (uint32_t i = 0; i < m_SwapChainImages.size(); i++) {
-			m_SwapChainImageViews[i] = CreateImageView(m_SwapChainImages[i], m_SwapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
-		}*/
 	}
 
 	void Application::CreateRenderPass()
@@ -461,7 +429,7 @@ namespace KronosVulkanJunk
 		depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentDescription colorAttachment{};
-		colorAttachment.format = m_SwapChainImageFormat;
+		colorAttachment.format = m_Swapchain->GetSurfaceFormat();
 		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -550,14 +518,14 @@ namespace KronosVulkanJunk
 	{
 		VkFormat depthFormat = FindDepthFormat();
 
-		CreateImage(m_SwapChainExtent.width, m_SwapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
+		CreateImage(m_Swapchain->GetExtent().width, m_Swapchain->GetExtent().height, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_DepthImage, m_DepthImageMemory);
 		m_DepthImageView = CreateImageView(m_DepthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 	}
 
 	void Application::CreateGraphicsPipeline()
 	{
-		const std::vector<char> vertShaderCode = ReadFile("C:/Dev/Kronos/assets/shaders/shader.vert.spv");
-		const std::vector<char> fragShaderCode = ReadFile("C:/Dev/Kronos/assets/shaders/shader.frag.spv");
+		const std::vector<char> vertShaderCode = ReadFile("C:/Dev/Kronos/RnD/Test01/assets/shaders/shader.vert.spv");
+		const std::vector<char> fragShaderCode = ReadFile("C:/Dev/Kronos/RnD/Test01/assets/shaders/shader.frag.spv");
 
 		VkShaderModule vertShaderModule = CreateShaderModule(vertShaderCode);
 		VkShaderModule fragShaderModule = CreateShaderModule(fragShaderCode);
@@ -598,14 +566,14 @@ namespace KronosVulkanJunk
 		VkViewport viewport{};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)m_SwapChainExtent.width;
-		viewport.height = (float)m_SwapChainExtent.height;
+		viewport.width = (float)m_Swapchain->GetExtent().width;
+		viewport.height = (float)m_Swapchain->GetExtent().height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
-		scissor.extent = m_SwapChainExtent;
+		scissor.extent = m_Swapchain->GetExtent();
 
 		VkPipelineViewportStateCreateInfo viewportState{};
 		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -706,8 +674,12 @@ namespace KronosVulkanJunk
 
 	void Application::CreateFramebuffers()
 	{
-		m_SwapChainFramebuffers.resize(m_SwapChainImageViews.size());
+		std::vector<VkImageView> m_SwapChainImageViews(m_Swapchain->GetImages().size());
+		for (uint32_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
+			m_SwapChainImageViews[i] = CreateImageView(m_Swapchain->GetImages()[i], m_Swapchain->GetSurfaceFormat(), VK_IMAGE_ASPECT_COLOR_BIT);
+		}
 
+		m_SwapChainFramebuffers.resize(m_SwapChainImageViews.size());
 		for (size_t i = 0; i < m_SwapChainImageViews.size(); i++) {
 			std::array<VkImageView, 2> attachments = {
 				m_SwapChainImageViews[i],
@@ -719,8 +691,8 @@ namespace KronosVulkanJunk
 			framebufferInfo.renderPass = m_RenderPass;
 			framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferInfo.pAttachments = attachments.data();
-			framebufferInfo.width = m_SwapChainExtent.width;
-			framebufferInfo.height = m_SwapChainExtent.height;
+			framebufferInfo.width = m_Swapchain->GetExtent().width;
+			framebufferInfo.height = m_Swapchain->GetExtent().height;
 			framebufferInfo.layers = 1;
 
 			if (vkCreateFramebuffer(m_Device->GetHandle(), &framebufferInfo, nullptr, &m_SwapChainFramebuffers[i]) != VK_SUCCESS) {
@@ -768,7 +740,7 @@ namespace KronosVulkanJunk
 			renderPassInfo.renderPass = m_RenderPass;
 			renderPassInfo.framebuffer = m_SwapChainFramebuffers[i];
 			renderPassInfo.renderArea.offset = { 0, 0 };
-			renderPassInfo.renderArea.extent = m_SwapChainExtent;
+			renderPassInfo.renderArea.extent = m_Swapchain->GetExtent();
 			renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			renderPassInfo.pClearValues = clearValues.data();
 
@@ -800,7 +772,7 @@ namespace KronosVulkanJunk
 		m_ImageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		m_RenderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		m_InFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-		m_ImagesInFlight.resize(m_SwapChainImages.size(), VK_NULL_HANDLE);
+		m_ImagesInFlight.resize(m_Swapchain->GetImages().size(), VK_NULL_HANDLE);
 
 		VkSemaphoreCreateInfo semaphoreInfo{};
 		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -822,7 +794,7 @@ namespace KronosVulkanJunk
 		}
 	}
 
-	void Application::CreateTextureImage()
+	/*void Application::CreateTextureImage()
 	{
 		int texWidth, texHeight, texChannels;
 		stbi_uc* pixels = stbi_load("C:/Dev/Kronos/assets/textures/debug/T_Debug_Orientation_01.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -881,7 +853,7 @@ namespace KronosVulkanJunk
 		if (vkCreateSampler(m_Device->GetHandle(), &samplerInfo, nullptr, &m_TextureSampler) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create texture sampler!");
 		}
-	}
+	}*/
 
 	void Application::CreateVertexBuffers()
 	{
@@ -929,27 +901,27 @@ namespace KronosVulkanJunk
 	{
 		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-		m_UniformBuffers.resize(m_SwapChainImages.size());
-		m_UniformBuffersMemory.resize(m_SwapChainImages.size());
+		m_UniformBuffers.resize(m_Swapchain->GetImages().size());
+		m_UniformBuffersMemory.resize(m_Swapchain->GetImages().size());
 
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+		for (size_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
 			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_UniformBuffers[i], m_UniformBuffersMemory[i]);
 		}
 	}
 
 	void Application::CreateDescriptorPool()
 	{
-		std::array<VkDescriptorPoolSize, 2> poolSizes{};
+		std::array<VkDescriptorPoolSize, 1> poolSizes{};
 		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(m_SwapChainImages.size());
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(m_SwapChainImages.size());
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(m_Swapchain->GetImages().size());
+		//poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		//poolSizes[1].descriptorCount = static_cast<uint32_t>(m_Swapchain->GetImages().size());
 
 		VkDescriptorPoolCreateInfo poolInfo{};
 		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
 		poolInfo.pPoolSizes = poolSizes.data();
-		poolInfo.maxSets = static_cast<uint32_t>(m_SwapChainImages.size());
+		poolInfo.maxSets = static_cast<uint32_t>(m_Swapchain->GetImages().size());
 
 		if (vkCreateDescriptorPool(m_Device->GetHandle(), &poolInfo, nullptr, &m_DescriptorPool) != VK_SUCCESS) {
 			std::cout << "Failed to create descriptor pool!" << std::endl;
@@ -959,30 +931,30 @@ namespace KronosVulkanJunk
 
 	void Application::CreateDescriptorSets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(m_SwapChainImages.size(), m_DescriptorSetLayout);
+		std::vector<VkDescriptorSetLayout> layouts(m_Swapchain->GetImages().size(), m_DescriptorSetLayout);
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		allocInfo.descriptorPool = m_DescriptorPool;
-		allocInfo.descriptorSetCount = static_cast<uint32_t>(m_SwapChainImages.size());
+		allocInfo.descriptorSetCount = static_cast<uint32_t>(m_Swapchain->GetImages().size());
 		allocInfo.pSetLayouts = layouts.data();
 
-		m_DescriptorSets.resize(m_SwapChainImages.size());
+		m_DescriptorSets.resize(m_Swapchain->GetImages().size());
 		if (vkAllocateDescriptorSets(m_Device->GetHandle(), &allocInfo, m_DescriptorSets.data()) != VK_SUCCESS) {
 			throw std::runtime_error("failed to allocate descriptor sets!");
 		}
 
-		for (size_t i = 0; i < m_SwapChainImages.size(); i++) {
+		for (size_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
 			VkDescriptorBufferInfo bufferInfo{};
 			bufferInfo.buffer = m_UniformBuffers[i];
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(UniformBufferObject);
 
-			VkDescriptorImageInfo imageInfo{};
+			/*VkDescriptorImageInfo imageInfo{};
 			imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			imageInfo.imageView = m_TextureImageView;
-			imageInfo.sampler = m_TextureSampler;
+			imageInfo.sampler = m_TextureSampler;*/
 
-			std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+			std::array<VkWriteDescriptorSet, 1> descriptorWrites{};
 
 			descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrites[0].dstSet = m_DescriptorSets[i];
@@ -992,13 +964,13 @@ namespace KronosVulkanJunk
 			descriptorWrites[0].descriptorCount = 1;
 			descriptorWrites[0].pBufferInfo = &bufferInfo;
 
-			descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			/*descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			descriptorWrites[1].dstSet = m_DescriptorSets[i];
 			descriptorWrites[1].dstBinding = 1;
 			descriptorWrites[1].dstArrayElement = 0;
 			descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			descriptorWrites[1].descriptorCount = 1;
-			descriptorWrites[1].pImageInfo = &imageInfo;
+			descriptorWrites[1].pImageInfo = &imageInfo;*/
 
 			vkUpdateDescriptorSets(m_Device->GetHandle(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
 		}
@@ -1014,7 +986,7 @@ namespace KronosVulkanJunk
 		UniformBufferObject ubo{};
 		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.proj = glm::perspective(glm::radians(45.0f), m_SwapChainExtent.width / (float)m_SwapChainExtent.height, 0.1f, 10.0f);
+		ubo.proj = glm::perspective(glm::radians(45.0f), m_Swapchain->GetExtent().width / (float)m_Swapchain->GetExtent().height, 0.1f, 10.0f);
 		ubo.proj[1][1] *= -1;
 
 		void* data;

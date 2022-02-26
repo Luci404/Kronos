@@ -13,7 +13,7 @@
 
 namespace Kronos
 {
-	class VulkanQueue;
+		 VulkanQueue;
 
     class VulkanDevice
     {
