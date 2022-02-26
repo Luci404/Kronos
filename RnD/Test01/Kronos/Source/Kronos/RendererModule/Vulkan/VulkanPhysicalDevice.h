@@ -47,6 +47,8 @@ namespace Kronos
 	        return (bool)supportsPresent;
         }
 
+        VulkanInstance& GetInstance() const { return m_Instance; }
+
         const VkPhysicalDeviceFeatures& GetFeatures() const { return m_Features; }
         const VkPhysicalDeviceProperties& GetProperties() const { return m_Properties; }
         const VkPhysicalDeviceMemoryProperties GetMemoryProperties() const { return m_MemoryProperties; }

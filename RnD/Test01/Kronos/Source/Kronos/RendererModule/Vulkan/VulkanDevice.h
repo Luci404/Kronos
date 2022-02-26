@@ -8,6 +8,8 @@
 #define VK_USE_PLATFORM_WIN32_KHR 
 #include <vulkan/vulkan.h>
 
+#include <vk_mem_alloc.h>
+
 #include <string>
 #include <vector>
 
@@ -33,7 +35,9 @@ namespace Kronos
 
 		const VulkanPhysicalDevice& GetPhysicalDevice() { return m_PhysicalDevice; }
 
+		bool IsExtensionSupported(const std::string& requested_extension);
 
+		bool IsExtensionEnabled(const char* extension);
 
 		/*const VulkanQueue& GetQueueByPresent(uint32_t queueIndex) const
 		{
@@ -56,5 +60,8 @@ namespace Kronos
     	const VulkanPhysicalDevice &m_PhysicalDevice;
         VkDevice m_Device;
 		std::vector<std::vector<VulkanQueue>> m_Queues;
-    };
+		std::vector<VkExtensionProperties> m_DeviceExtensions;
+		std::vector<const char*> m_EnabledExtensions{};
+		VmaAllocator m_MemoryAllocator{ VK_NULL_HANDLE };
+	};
 }

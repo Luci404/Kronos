@@ -11,3 +11,6 @@
 [submodule "RnD/Test01/Kronos/Vendor/glm"]
 	path = RnD/Test01/Kronos/Vendor/glm
 	url = https://github.com/g-truc/glm
+[submodule "RnD/Test01/Kronos/Vendor/vma"]
+	path = RnD/Test01/Kronos/Vendor/vma
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator

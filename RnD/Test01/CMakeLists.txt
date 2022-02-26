@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+
 # glad
 project(glad)
 set(GLAD_DIRECTORY "${CMAKE_SOURCE_DIR}/Kronos/Vendor/glad")
@@ -8,6 +9,17 @@ target_include_directories(glad PUBLIC "${GLAD_DIRECTORY}/include")
 
 # glfw
 add_subdirectory("${CMAKE_SOURCE_DIR}/Kronos/Vendor/glfw")
+
+# vulkan
+add_library(vulkan INTERFACE)
+set(VULKAN_PATH "C:/VulkanSDK/1.2.170.0")       
+target_include_directories(vulkan INTERFACE "${VULKAN_PATH}/Include")
+target_link_libraries(vulkan INTERFACE "${VULKAN_PATH}/Lib/vulkan-1.lib")
+
+# vma
+add_library(vma INTERFACE)
+target_include_directories(vma INTERFACE "${CMAKE_SOURCE_DIR}/Kronos/Vendor/vma/include")
+target_link_libraries(vma INTERFACE vulkan)
 
 # Kronos
 project(Kronos)
@@ -25,16 +37,14 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 target_link_libraries(Kronos PUBLIC glfw)
-
+target_link_libraries(Kronos PUBLIC vma)
 target_link_libraries(Kronos PUBLIC glad)
 set_target_properties(glad PROPERTIES FOLDER "Dependencies/glad")
 
 add_subdirectory("Kronos/Vendor/glm")
 include_directories("${CMAKE_SOURCE_DIR}/Kronos/Vendor/glm")   
-
-set(VULKAN_PATH "C:/VulkanSDK/1.2.170.0")                                             
-include_directories(AFTER "${VULKAN_PATH}/Include")
-target_link_libraries(Kronos PRIVATE "${VULKAN_PATH}/Lib/vulkan-1.lib")
+                       
+target_link_libraries(Kronos PRIVATE vulkan)
 
 get_property(TARGET_SOURCE_FILES TARGET Kronos PROPERTY SOURCES)
 source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/Kronos/Source" FILES ${TARGET_SOURCE_FILES})
