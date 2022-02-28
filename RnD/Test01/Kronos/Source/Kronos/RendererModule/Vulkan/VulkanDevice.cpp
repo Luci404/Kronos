@@ -1,8 +1,13 @@
 #include "Kronos/RendererModule/Vulkan/VulkanDevice.h"
+#include "Kronos/RendererModule/Vulkan/VulkanPhysicalDevice.h"
 #include "Kronos/RendererModule/Vulkan/VulkanQueue.h"
+#include "Kronos/RendererModule/Vulkan/VulkanBuffer.h"
+#include "Kronos/RendererModule/Vulkan/VulkanCommandPool.h"
 
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
+
+#define DEFAULT_FENCE_TIMEOUT 100000000000
 
 namespace Kronos
 {
@@ -140,6 +145,8 @@ namespace Kronos
 		allocator_info.pVulkanFunctions = &vma_vulkan_func;
 
 		KRONOS_CORE_ASSERT(vmaCreateAllocator(&allocator_info, &m_MemoryAllocator) == VK_SUCCESS, "Cannot create allocator");
+	
+		m_CommandPool = CreateScope<VulkanCommandPool>(*this, GetQueueByFlags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0).GetFamilyIndex());
 	}
 
 	const VulkanQueue& VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const
@@ -165,7 +172,7 @@ namespace Kronos
 		KRONOS_CORE_ASSERT(false, "Queue not found!");
 	}
 
-	bool VulkanDevice::IsExtensionSupported(const std::string& requestedExtension)
+	bool VulkanDevice::IsExtensionSupported(const std::string& requestedExtension) const
 	{
 		return std::find_if(m_DeviceExtensions.begin(), m_DeviceExtensions.end(),
 			[requestedExtension](auto& deviceExtension) {
@@ -173,8 +180,86 @@ namespace Kronos
 			}) != m_DeviceExtensions.end();
 	}
 
-	bool VulkanDevice::IsExtensionEnabled(const char* extension)
+	bool VulkanDevice::IsExtensionEnabled(const char* extension) const
 	{
 		return std::find_if(m_EnabledExtensions.begin(), m_EnabledExtensions.end(), [extension](const char* enabled_extension) { return strcmp(extension, enabled_extension) == 0; }) != m_EnabledExtensions.end();
+	}
+
+	VkCommandBuffer VulkanDevice::CreateCommandBuffer(VkCommandBufferLevel comandBufferLevel, bool begin) const
+	{
+		KRONOS_CORE_ASSERT(m_CommandPool != VK_NULL_HANDLE, "Command pool was VK_NULL_HANDLE");
+	
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		commandBufferAllocateInfo.commandPool = m_CommandPool->GetHandle();
+		commandBufferAllocateInfo.level = comandBufferLevel;
+		commandBufferAllocateInfo.commandBufferCount = 1;
+
+		VkCommandBuffer commandBuffer;
+		KRONOS_CORE_ASSERT(vkAllocateCommandBuffers(m_Device, &commandBufferAllocateInfo, &commandBuffer) == VK_SUCCESS, "");
+
+		if (begin)
+		{
+			VkCommandBufferBeginInfo commandBufferInfo{};
+			commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			vkBeginCommandBuffer(commandBuffer, &commandBufferInfo);
+		}
+
+		return commandBuffer;
+	}
+
+	void VulkanDevice::SubmitCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, bool free, VkSemaphore signalSemaphore) const
+	{
+		if (commandBuffer == VK_NULL_HANDLE) { return; }
+
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		if (signalSemaphore)
+		{
+			submitInfo.pSignalSemaphores = &signalSemaphore;
+			submitInfo.signalSemaphoreCount = 1;
+		}
+
+		VkFenceCreateInfo fenceCreateInfo{};
+		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceCreateInfo.flags = VK_FLAGS_NONE;
+
+		VkFence fence;
+		vkCreateFence(m_Device, &fenceCreateInfo, nullptr, &fence);
+
+		VkResult result = vkQueueSubmit(queue, 1, &submitInfo, fence);
+		vkWaitForFences(m_Device, 1, &fence, VK_TRUE, DEFAULT_FENCE_TIMEOUT);
+	
+		vkDestroyFence(m_Device, fence, nullptr);
+		if (commandBuffer && free)
+		{
+			vkFreeCommandBuffers(m_Device, m_CommandPool->GetHandle(), 1, &commandBuffer);
+		}
+	}
+
+	void VulkanDevice::CopyBuffer(VulkanBuffer& source, VulkanBuffer& destination, VkQueue queue, VkBufferCopy* copyRegion)
+	{
+		KRONOS_CORE_ASSERT(destination.GetSize() <= source.GetSize(), "");
+		KRONOS_CORE_ASSERT(source.GetHandle() != VK_NULL_HANDLE, "");
+
+		VkCommandBuffer commandBuffer = CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
+
+		VkBufferCopy bufferCopy{};
+		if (copyRegion == nullptr)
+		{
+			bufferCopy.size = source.GetSize();
+		}
+		else
+		{
+			bufferCopy = *copyRegion;
+		}
+
+		vkCmdCopyBuffer(commandBuffer, source.GetHandle(), destination.GetHandle(), 1, &bufferCopy);
+
+		SubmitCommandBuffer(commandBuffer, queue);
 	}
 }

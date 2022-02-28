@@ -1,5 +1,7 @@
 #include "Kronos/RendererModule/Vulkan/VulkanSwapchain.h"
 #include "Kronos/RendererModule/Vulkan/VulkanDevice.h"
+#include "Kronos/RendererModule/Vulkan/VulkanPhysicalDevice.h"
+
 #include "Kronos/LoggingModule/LoggingModule.h"
 
 #include <algorithm>

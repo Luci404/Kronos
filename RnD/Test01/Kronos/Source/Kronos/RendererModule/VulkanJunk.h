@@ -5,6 +5,7 @@
 #include "Kronos/RendererModule/Vulkan/VulkanDevice.h"
 #include "Kronos/RendererModule/Vulkan/VulkanQueue.h"
 #include "Kronos/RendererModule/Vulkan/VulkanSwapchain.h"
+#include "Kronos/RendererModule/Vulkan/VulkanBuffer.h"
 
 #include "Kronos/WindowModule/WindowModule.h"
 #include "Kronos/Core/Memory.h"
@@ -223,10 +224,12 @@ namespace KronosVulkanJunk
 			4, 5, 6, 6, 7, 4
 		};
 
-		VkBuffer m_VertexBuffer;
-		VkDeviceMemory m_VertexBufferMemory;
-		VkBuffer m_IndexBuffer;
-		VkDeviceMemory m_IndexBufferMemory;
+		Kronos::Scope<Kronos::VulkanBuffer> m_VertexBuffer;
+		Kronos::Scope<Kronos::VulkanBuffer> m_IndexBuffer;
+		//VkBuffer m_VertexBuffer;
+		//VkDeviceMemory m_VertexBufferMemory;
+		//VkBuffer m_IndexBuffer;
+		//VkDeviceMemory m_IndexBufferMemory;
 
 		std::vector<VkBuffer> m_UniformBuffers;
 		std::vector<VkDeviceMemory> m_UniformBuffersMemory;
@@ -294,8 +297,22 @@ namespace KronosVulkanJunk
 		CreateTextureImageView();
 		CreateTextureSampler();*/
 
-		CreateVertexBuffers();
-		CreateIndexBuffers();
+		// Vertex buffer
+		VkDeviceSize vertexBufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
+		Kronos::VulkanBuffer vertexStagingBuffer = Kronos::VulkanBuffer(*m_Device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+		vertexStagingBuffer.Update((uint8_t*)m_Vertices.data(), m_Vertices.size() * sizeof(Vertex), 0);
+
+		m_VertexBuffer = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+		m_Device->CopyBuffer(vertexStagingBuffer, *m_VertexBuffer, m_GraphicsQueue);
+
+		// Index buffer
+		VkDeviceSize indexBufferSize = sizeof(m_Indices[0]) * m_Indices.size();
+		Kronos::VulkanBuffer indexStagingBuffer = Kronos::VulkanBuffer(*m_Device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+		indexStagingBuffer.Update((uint8_t*)m_Indices.data(), m_Indices.size() * sizeof(uint32_t), 0);
+
+		m_IndexBuffer = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+		m_Device->CopyBuffer(indexStagingBuffer, *m_IndexBuffer, m_GraphicsQueue);
+
 		CreateUniformBuffers();
 		CreateDescriptorPool();
 		CreateDescriptorSets();
@@ -342,11 +359,11 @@ namespace KronosVulkanJunk
 		}
 		vkDestroyDescriptorPool(m_Device->GetHandle(), m_DescriptorPool, nullptr);
 
-		vkDestroyBuffer(m_Device->GetHandle(), m_IndexBuffer, nullptr);
-		vkFreeMemory(m_Device->GetHandle(), m_IndexBufferMemory, nullptr);
+		//vkDestroyBuffer(m_Device->GetHandle(), m_IndexBuffer, nullptr);
+		//vkFreeMemory(m_Device->GetHandle(), m_IndexBufferMemory, nullptr);
 
-		vkDestroyBuffer(m_Device->GetHandle(), m_VertexBuffer, nullptr);
-		vkFreeMemory(m_Device->GetHandle(), m_VertexBufferMemory, nullptr);
+		// vkDestroyBuffer(m_Device->GetHandle(), m_VertexBuffer, nullptr);
+		// vkFreeMemory(m_Device->GetHandle(), m_VertexBufferMemory, nullptr);
 
 		vkDestroyDevice(m_Device->GetHandle(), nullptr);
 
@@ -749,11 +766,11 @@ namespace KronosVulkanJunk
 			vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
 
 			// Bind vertex buffer
-			VkBuffer vertexBuffers[] = { m_VertexBuffer };
+			VkBuffer vertexBuffers[] = { m_VertexBuffer->GetHandle()};
 			VkDeviceSize offsets[] = { 0 };
 			vkCmdBindVertexBuffers(m_CommandBuffers[i], 0, 1, vertexBuffers, offsets);
 
-			vkCmdBindIndexBuffer(m_CommandBuffers[i], m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+			vkCmdBindIndexBuffer(m_CommandBuffers[i], m_IndexBuffer->GetHandle(), 0, VK_INDEX_TYPE_UINT16);
 
 			vkCmdBindDescriptorSets(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayout, 0, 1, &m_DescriptorSets[i], 0, nullptr);
 			vkCmdDrawIndexed(m_CommandBuffers[i], static_cast<uint32_t>(m_Indices.size()), 1, 0, 0, 0);
@@ -857,7 +874,7 @@ namespace KronosVulkanJunk
 
 	void Application::CreateVertexBuffers()
 	{
-		VkDeviceSize bufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
+		/*VkDeviceSize bufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
 
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
@@ -873,28 +890,22 @@ namespace KronosVulkanJunk
 		CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
 
 		vkDestroyBuffer(m_Device->GetHandle(), stagingBuffer, nullptr);
-		vkFreeMemory(m_Device->GetHandle(), stagingBufferMemory, nullptr);
+		vkFreeMemory(m_Device->GetHandle(), stagingBufferMemory, nullptr);*/
+
+		//
+
+
+
 	}
 
 	void Application::CreateIndexBuffers()
 	{
-		VkDeviceSize bufferSize = sizeof(m_Indices[0]) * m_Indices.size();
+		/*VkDeviceSize bufferSize = sizeof(m_Indices[0]) * m_Indices.size();
+		Kronos::VulkanBuffer stagingBuffer = Kronos::VulkanBuffer(*m_Device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO);
+		stagingBuffer.Update((uint8_t*)m_Indices.data(), m_Indices.size() * sizeof(uint8_t), 0);
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-		void* data;
-		vkMapMemory(m_Device->GetHandle(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, m_Indices.data(), (size_t)bufferSize);
-		vkUnmapMemory(m_Device->GetHandle(), stagingBufferMemory);
-
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_IndexBuffer, m_IndexBufferMemory);
-
-		CopyBuffer(stagingBuffer, m_IndexBuffer, bufferSize);
-
-		vkDestroyBuffer(m_Device->GetHandle(), stagingBuffer, nullptr);
-		vkFreeMemory(m_Device->GetHandle(), stagingBufferMemory, nullptr);
+		m_IndexBuffer = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO);
+		m_Device->CopyBuffer(stagingBuffer, m_IndexBuffer, queue);*/
 	}
 
 	void Application::CreateUniformBuffers()
