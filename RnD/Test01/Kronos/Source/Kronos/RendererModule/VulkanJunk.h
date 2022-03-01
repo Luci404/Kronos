@@ -8,6 +8,7 @@
 #include "Kronos/RendererModule/Vulkan/VulkanBuffer.h"
 
 #include "Kronos/WindowModule/WindowModule.h"
+#include "Kronos/LoggingModule/LoggingModule.h"
 #include "Kronos/Core/Memory.h"
 #include "Kronos/Core/Assert.h"
 
@@ -111,7 +112,6 @@ namespace KronosVulkanJunk
 		/*void CreateTextureImage();
 		void CreateTextureImageView();
 		void CreateTextureSampler();*/
-		void CreateUniformBuffers();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
 		void CreateCommandBuffers();
@@ -224,13 +224,14 @@ namespace KronosVulkanJunk
 
 		Kronos::Scope<Kronos::VulkanBuffer> m_VertexBuffer;
 		Kronos::Scope<Kronos::VulkanBuffer> m_IndexBuffer;
+		std::vector<Kronos::Scope<Kronos::VulkanBuffer>> m_UniformBuffers;
 		//VkBuffer m_VertexBuffer;
 		//VkDeviceMemory m_VertexBufferMemory;
 		//VkBuffer m_IndexBuffer;
 		//VkDeviceMemory m_IndexBufferMemory;
 
-		std::vector<VkBuffer> m_UniformBuffers;
-		std::vector<VkDeviceMemory> m_UniformBuffersMemory;
+		//std::vector<VkBuffer> m_UniformBuffers;
+		//std::vector<VkDeviceMemory> m_UniformBuffersMemory;
 
 		VkDescriptorPool m_DescriptorPool;
 		std::vector<VkDescriptorSet> m_DescriptorSets;
@@ -253,6 +254,8 @@ namespace KronosVulkanJunk
 	Application::Application(Kronos::Ref<Kronos::Window> window)
 		: m_Window(window)
 	{
+		Kronos::Log::Trace("Initializing vulkan junk...");
+
 		// Create an instance
 		std::unordered_map<const char*, bool> requestedInstanceExtensions = { {"VK_KHR_surface", true}, {"VK_KHR_win32_surface", true}, {VK_EXT_DEBUG_UTILS_EXTENSION_NAME, true} };
 		std::unordered_map<const char*, bool> requestedInstanceLayers = { {"VK_LAYER_KHRONOS_validation", true} };
@@ -311,7 +314,12 @@ namespace KronosVulkanJunk
 		m_IndexBuffer = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 		m_Device->CopyBuffer(indexStagingBuffer, *m_IndexBuffer, m_GraphicsQueue);
 
-		CreateUniformBuffers();
+		// Create uniform buffers
+		m_UniformBuffers.resize(m_Swapchain->GetImages().size());
+		for (size_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
+			m_UniformBuffers[i] = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, sizeof(UniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
+		}
+
 		CreateDescriptorPool();
 		CreateDescriptorSets();
 		CreateCommandBuffers();
@@ -320,6 +328,8 @@ namespace KronosVulkanJunk
 
 	Application::~Application()
 	{
+		Kronos::Log::Trace("Terminating vulkan junk...");
+
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
 			vkDestroySemaphore(m_Device->GetHandle(), m_RenderFinishedSemaphores[i], nullptr);
 			vkDestroySemaphore(m_Device->GetHandle(), m_ImageAvailableSemaphores[i], nullptr);
@@ -349,17 +359,8 @@ namespace KronosVulkanJunk
 
 		vkDestroySwapchainKHR(m_Device->GetHandle(), m_Swapchain->GetHandle(), nullptr);
 
-		for (size_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
-			vkDestroyBuffer(m_Device->GetHandle(), m_UniformBuffers[i], nullptr);
-			vkFreeMemory(m_Device->GetHandle(), m_UniformBuffersMemory[i], nullptr);
-		}
 		vkDestroyDescriptorPool(m_Device->GetHandle(), m_DescriptorPool, nullptr);
 
-		//vkDestroyBuffer(m_Device->GetHandle(), m_IndexBuffer, nullptr);
-		//vkFreeMemory(m_Device->GetHandle(), m_IndexBufferMemory, nullptr);
-
-		// vkDestroyBuffer(m_Device->GetHandle(), m_VertexBuffer, nullptr);
-		// vkFreeMemory(m_Device->GetHandle(), m_VertexBufferMemory, nullptr);
 
 		vkDestroySurfaceKHR(m_Instance->GetHandle(), m_Surface, nullptr);
 	}
@@ -371,6 +372,12 @@ namespace KronosVulkanJunk
 
 		uint32_t imageIndex;
 		vkAcquireNextImageKHR(m_Device->GetHandle(), m_Swapchain->GetHandle(), UINT64_MAX, m_ImageAvailableSemaphores[m_CurrentFrame], VK_NULL_HANDLE, &imageIndex);
+
+		if (imageIndex > 5)
+		{
+			Kronos::Log::Trace("Something wired happend, returning.");
+			return;
+		}
 
 		if (m_ImagesInFlight[imageIndex] != VK_NULL_HANDLE) {
 			vkWaitForFences(m_Device->GetHandle(), 1, &m_ImagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
@@ -861,18 +868,6 @@ namespace KronosVulkanJunk
 		}
 	}*/
 
-	void Application::CreateUniformBuffers()
-	{
-		VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-		m_UniformBuffers.resize(m_Swapchain->GetImages().size());
-		m_UniformBuffersMemory.resize(m_Swapchain->GetImages().size());
-
-		for (size_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
-			CreateBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_UniformBuffers[i], m_UniformBuffersMemory[i]);
-		}
-	}
-
 	void Application::CreateDescriptorPool()
 	{
 		std::array<VkDescriptorPoolSize, 1> poolSizes{};
@@ -909,7 +904,7 @@ namespace KronosVulkanJunk
 
 		for (size_t i = 0; i < m_Swapchain->GetImages().size(); i++) {
 			VkDescriptorBufferInfo bufferInfo{};
-			bufferInfo.buffer = m_UniformBuffers[i];
+			bufferInfo.buffer = m_UniformBuffers[i]->GetHandle();
 			bufferInfo.offset = 0;
 			bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -953,10 +948,7 @@ namespace KronosVulkanJunk
 		ubo.proj = glm::perspective(glm::radians(45.0f), m_Swapchain->GetExtent().width / (float)m_Swapchain->GetExtent().height, 0.1f, 10.0f);
 		ubo.proj[1][1] *= -1;
 
-		void* data;
-		vkMapMemory(m_Device->GetHandle(), m_UniformBuffersMemory[currentImage], 0, sizeof(ubo), 0, &data);
-		memcpy(data, &ubo, sizeof(ubo));
-		vkUnmapMemory(m_Device->GetHandle(), m_UniformBuffersMemory[currentImage]);
+		m_UniformBuffers[currentImage]->Update((uint8_t*)&ubo, sizeof(ubo), 0);
 	}
 
 	bool Application::CheckValidationLayerSupport() {

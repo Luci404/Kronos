@@ -289,31 +289,6 @@ namespace Kronos
 		void Render()
 		{
 			vulkanJunk.Render();
-			/*glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			{
-				glm::mat4 view = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-				glm::mat4 projection = glm::perspective(45.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-				glBindBuffer(GL_UNIFORM_BUFFER, uboMatrices);
-				glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(projection));
-				glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
-				glBindBuffer(GL_UNIFORM_BUFFER, 0);
-			}
-
-			for (const StaticMeshIntegrant staticMesh : m_StaticMeshes)
-			{
-				glBindVertexArray(cubeVAO);
-				glUseProgram(shaderProgram);
-
-				glBindBuffer(GL_UNIFORM_BUFFER, uboObject);
-				glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(staticMesh.TransformMatrix));
-				glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-				glDrawArrays(GL_TRIANGLES, 0, 36);
-			}
-
-			SwapBuffers(m_Window->GetDeviceContext_TMP());*/
 		}
 
 	private:

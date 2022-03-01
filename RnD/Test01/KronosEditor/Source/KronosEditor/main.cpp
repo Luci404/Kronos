@@ -58,9 +58,8 @@ namespace KronosEditor
         void Tick() override
         {
             Kronos::GameInstance::Tick();
-            m_GameWindow->PollEvents();
-
             m_SceneRenderer->Render();
+            m_GameWindow->PollEvents();
         }
 
     private:
