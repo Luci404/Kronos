@@ -20,6 +20,7 @@ namespace Kronos
 			const std::unordered_map<const char*, bool>& requestedExtensions = {},
 			const std::unordered_map<const char*, bool>& requestedLayers = {}
 		/*TODO: bool headless = false */)
+			: m_DebugMessenger(VK_NULL_HANDLE)
 		{
 
 			bool debug = true;
@@ -112,6 +113,21 @@ namespace Kronos
 				KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr != nullptr, "Failed to get 'vkCreateDebugUtilsMessengerEXT' proc address!");
 				KRONOS_CORE_ASSERT(vkCreateDebugUtilsMessengerEXTProcAddr(m_Instance, &debugUtilsMessengerCreateInfo, nullptr, &m_DebugMessenger) == VK_SUCCESS, "Failed to set up debug messenger!");
 			}
+		}
+
+		~VulkanInstance()
+		{
+			if (m_DebugMessenger != VK_NULL_HANDLE) {
+				auto DestroyDebugUtilsMessengerEXT = [](VkInstance& instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+				{
+					auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+					if (func != nullptr) { func(instance, debugMessenger, pAllocator); }
+				};
+
+				DestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
+			}
+
+			vkDestroyInstance(m_Instance, nullptr);
 		}
 
 		VulkanInstance(const VulkanInstance&) = delete;

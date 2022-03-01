@@ -111,8 +111,6 @@ namespace KronosVulkanJunk
 		/*void CreateTextureImage();
 		void CreateTextureImageView();
 		void CreateTextureSampler();*/
-		void CreateVertexBuffers();
-		void CreateIndexBuffers();
 		void CreateUniformBuffers();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
@@ -297,7 +295,7 @@ namespace KronosVulkanJunk
 		CreateTextureImageView();
 		CreateTextureSampler();*/
 
-		// Vertex buffer
+		// Create vertex buffer
 		VkDeviceSize vertexBufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
 		Kronos::VulkanBuffer vertexStagingBuffer = Kronos::VulkanBuffer(*m_Device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		vertexStagingBuffer.Update((uint8_t*)m_Vertices.data(), m_Vertices.size() * sizeof(Vertex), 0);
@@ -305,7 +303,7 @@ namespace KronosVulkanJunk
 		m_VertexBuffer = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 		m_Device->CopyBuffer(vertexStagingBuffer, *m_VertexBuffer, m_GraphicsQueue);
 
-		// Index buffer
+		// Create index buffer
 		VkDeviceSize indexBufferSize = sizeof(m_Indices[0]) * m_Indices.size();
 		Kronos::VulkanBuffer indexStagingBuffer = Kronos::VulkanBuffer(*m_Device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 		indexStagingBuffer.Update((uint8_t*)m_Indices.data(), m_Indices.size() * sizeof(uint32_t), 0);
@@ -326,8 +324,6 @@ namespace KronosVulkanJunk
 			vkDestroySemaphore(m_Device->GetHandle(), m_RenderFinishedSemaphores[i], nullptr);
 			vkDestroySemaphore(m_Device->GetHandle(), m_ImageAvailableSemaphores[i], nullptr);
 		}
-
-		vkDestroyCommandPool(m_Device->GetHandle(), m_CommandPool, nullptr);
 
 		for (auto framebuffer : m_SwapChainFramebuffers) {
 			vkDestroyFramebuffer(m_Device->GetHandle(), framebuffer, nullptr);
@@ -365,14 +361,7 @@ namespace KronosVulkanJunk
 		// vkDestroyBuffer(m_Device->GetHandle(), m_VertexBuffer, nullptr);
 		// vkFreeMemory(m_Device->GetHandle(), m_VertexBufferMemory, nullptr);
 
-		vkDestroyDevice(m_Device->GetHandle(), nullptr);
-
-		if (enableValidationLayers) {
-			//DestroyDebugUtilsMessengerEXT(m_Instance->GetHandle(), m_DebugMessenger, nullptr);
-		}
-
 		vkDestroySurfaceKHR(m_Instance->GetHandle(), m_Surface, nullptr);
-		vkDestroyInstance(m_Instance->GetHandle(), nullptr);
 	}
 
 	void Application::Render()
@@ -871,42 +860,6 @@ namespace KronosVulkanJunk
 			throw std::runtime_error("failed to create texture sampler!");
 		}
 	}*/
-
-	void Application::CreateVertexBuffers()
-	{
-		/*VkDeviceSize bufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
-
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-		void* data;
-		vkMapMemory(m_Device->GetHandle(), stagingBufferMemory, 0, bufferSize, 0, &data);
-		memcpy(data, m_Vertices.data(), (size_t)bufferSize);
-		vkUnmapMemory(m_Device->GetHandle(), stagingBufferMemory);
-
-		CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_VertexBuffer, m_VertexBufferMemory);
-
-		CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
-
-		vkDestroyBuffer(m_Device->GetHandle(), stagingBuffer, nullptr);
-		vkFreeMemory(m_Device->GetHandle(), stagingBufferMemory, nullptr);*/
-
-		//
-
-
-
-	}
-
-	void Application::CreateIndexBuffers()
-	{
-		/*VkDeviceSize bufferSize = sizeof(m_Indices[0]) * m_Indices.size();
-		Kronos::VulkanBuffer stagingBuffer = Kronos::VulkanBuffer(*m_Device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO);
-		stagingBuffer.Update((uint8_t*)m_Indices.data(), m_Indices.size() * sizeof(uint8_t), 0);
-
-		m_IndexBuffer = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO);
-		m_Device->CopyBuffer(stagingBuffer, m_IndexBuffer, queue);*/
-	}
 
 	void Application::CreateUniformBuffers()
 	{

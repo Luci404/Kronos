@@ -149,6 +149,24 @@ namespace Kronos
 		m_CommandPool = CreateScope<VulkanCommandPool>(*this, GetQueueByFlags(VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT, 0).GetFamilyIndex());
 	}
 
+	VulkanDevice::~VulkanDevice()
+	{
+		if (m_MemoryAllocator != VK_NULL_HANDLE)
+		{
+			/*VmaStats stats;
+			vmaCalculateStats(m_MemoryAllocator, &stats);
+			Log::Trace("Total Device memory leaked: {0} bytes, stats.total.usedBytes); */
+
+			vmaDestroyAllocator(m_MemoryAllocator);
+		}
+
+		if (m_Device != VK_NULL_HANDLE)
+		{
+			vkDestroyDevice(m_Device, nullptr);
+		}
+
+	}
+
 	const VulkanQueue& VulkanDevice::GetQueue(uint32_t queueFamilyIndex, uint32_t queueIndex) const
 	{
 		return m_Queues[queueFamilyIndex][queueIndex];

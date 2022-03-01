@@ -22,6 +22,7 @@ namespace Kronos
     {
     public:
         VulkanDevice(VulkanPhysicalDevice& physicalDevice, VkSurfaceKHR surface, const std::unordered_map<const char *, bool>& requestedExtensions = {});
+		~VulkanDevice();
 
        	VulkanDevice(const VulkanDevice &) = delete;
     	VulkanDevice(VulkanDevice &&) = delete;

@@ -34,9 +34,9 @@ namespace Kronos
 
         void Terminate()
         {
-            for (Layer *layer : m_LayerStack)
+            for (std::vector<Layer *>::reverse_iterator it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it)
             {
-                layer->Terminate();
+                (*it)->Terminate();
             }
         }
 
