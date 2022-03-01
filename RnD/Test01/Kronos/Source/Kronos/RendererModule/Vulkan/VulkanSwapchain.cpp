@@ -306,15 +306,15 @@ namespace Kronos
         swapchainCreateInfo.oldSwapchain = m_Properties.OldSwapchain;
         swapchainCreateInfo.surface = m_Surface;
 
-        KRONOS_CORE_ASSERT(vkCreateSwapchainKHR(m_Device.GetHandle(), &swapchainCreateInfo, nullptr, &m_Handle) == VK_SUCCESS, "Failed to create swapchain");
+        KRONOS_CORE_ASSERT(vkCreateSwapchainKHR(m_Device.GetHandle(), &swapchainCreateInfo, nullptr, &m_Swapchain) == VK_SUCCESS, "Failed to create swapchain");
 
         uint32_t imageAvailable{0u};
-        vkGetSwapchainImagesKHR(m_Device.GetHandle(), m_Handle, &imageAvailable, nullptr);
+        vkGetSwapchainImagesKHR(m_Device.GetHandle(), m_Swapchain, &imageAvailable, nullptr);
         m_Images.resize(imageAvailable);
-        vkGetSwapchainImagesKHR(m_Device.GetHandle(), m_Handle, &imageAvailable, m_Images.data());
+        vkGetSwapchainImagesKHR(m_Device.GetHandle(), m_Swapchain, &imageAvailable, m_Images.data());
     }
 
-    VkSwapchainKHR VulkanSwapchain::GetHandle() const { return m_Handle; }
+    VkSwapchainKHR VulkanSwapchain::GetHandle() const { return m_Swapchain; }
 
     const std::vector<VkImage>& VulkanSwapchain::GetImages() const { return m_Images; };
 
@@ -329,4 +329,8 @@ namespace Kronos
         return m_Properties.SurfaceFormat.format;
     }
 
+    VkResult VulkanSwapchain::AcquireNextImage(uint32_t &imageIndex, VkSemaphore imageAcquiredSemaphore, VkFence fence)
+    {
+        return vkAcquireNextImageKHR(m_Device.GetHandle(), m_Swapchain, UINT64_MAX, imageAcquiredSemaphore, fence, &imageIndex);
+    }
 }

@@ -53,10 +53,12 @@ namespace Kronos
 
         VkFormat GetSurfaceFormat() const;
 
+        VkResult AcquireNextImage(uint32_t &imageIndex, VkSemaphore imageAcquiredSemaphore, VkFence fence = VK_NULL_HANDLE);
+
     private:
         VulkanDevice &m_Device;
         VkSurfaceKHR m_Surface{VK_NULL_HANDLE};
-        VkSwapchainKHR m_Handle{VK_NULL_HANDLE};
+        VkSwapchainKHR m_Swapchain{VK_NULL_HANDLE};
         std::vector<VkImage> m_Images;
         std::vector<VkSurfaceFormatKHR> m_AvailableSurfaceFormats{};
         std::vector<VkPresentModeKHR> m_AvailablePresentModes{};
