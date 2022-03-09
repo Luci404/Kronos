@@ -21,6 +21,15 @@ add_library(vma INTERFACE)
 target_include_directories(vma INTERFACE "${CMAKE_SOURCE_DIR}/Kronos/Vendor/vma/include")
 target_link_libraries(vma INTERFACE vulkan)
 
+# imgui
+project(imgui)
+set(IMGUI_DIRECTORY "${CMAKE_SOURCE_DIR}/../../Kronos/Vendor/imgui")
+file(GLOB IMGUI_HEADERS "${IMGUI_DIRECTORY}/*.h")
+file(GLOB IMGUI_SOURCES "${IMGUI_DIRECTORY}/*.cpp")
+add_library(imgui "${IMGUI_HEADERS}" "${IMGUI_SOURCES}" "${IMGUI_DIRECTORY}/backends/imgui_impl_win32.cpp" "${IMGUI_DIRECTORY}/backends/imgui_impl_vulkan.cpp")
+target_include_directories(imgui PUBLIC "${IMGUI_DIRECTORY}" "${IMGUI_DIRECTORY}/examples")
+target_link_libraries(imgui vulkan)
+
 # Kronos
 project(Kronos)
 file(GLOB_RECURSE KRONOS_HEADERS "${CMAKE_SOURCE_DIR}/Kronos/Source/*.h")
@@ -45,6 +54,9 @@ add_subdirectory("Kronos/Vendor/glm")
 include_directories("${CMAKE_SOURCE_DIR}/Kronos/Vendor/glm")   
                        
 target_link_libraries(Kronos PRIVATE vulkan)
+
+target_link_libraries(Kronos PUBLIC imgui) 
+set_target_properties(imgui PROPERTIES FOLDER "Dependencies/imgui")
 
 get_property(TARGET_SOURCE_FILES TARGET Kronos PROPERTY SOURCES)
 source_group(TREE "${CMAKE_CURRENT_LIST_DIR}/Kronos/Source" FILES ${TARGET_SOURCE_FILES})

@@ -36,6 +36,11 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_win32.h>
+
 namespace KronosVulkanJunk
 {
 	struct Vertex {
@@ -143,7 +148,7 @@ namespace KronosVulkanJunk
 	private:
 		Kronos::Ref<Kronos::Window> m_Window;
 
-		Kronos::Scope<Kronos::VulkanInstance> m_Instance;
+		Kronos::Scope<Kronos::VulkanInstance>	 m_Instance;
 		Kronos::Scope<Kronos::VulkanPhysicalDevice> m_PhysicalDevice;
 		Kronos::Scope<Kronos::VulkanDevice> m_Device;
 		Kronos::Scope<Kronos::VulkanSwapchain> m_Swapchain;
@@ -192,13 +197,6 @@ namespace KronosVulkanJunk
 		Kronos::Scope<Kronos::VulkanBuffer> m_VertexBuffer;
 		Kronos::Scope<Kronos::VulkanBuffer> m_IndexBuffer;
 		std::vector<Kronos::Scope<Kronos::VulkanBuffer>> m_UniformBuffers;
-		//VkBuffer m_VertexBuffer;
-		//VkDeviceMemory m_VertexBufferMemory;
-		//VkBuffer m_IndexBuffer;
-		//VkDeviceMemory m_IndexBufferMemory;
-
-		//std::vector<VkBuffer> m_UniformBuffers;
-		//std::vector<VkDeviceMemory> m_UniformBuffersMemory;
 
 		VkDescriptorPool m_DescriptorPool;
 		std::vector<VkDescriptorSet> m_DescriptorSets;
@@ -287,6 +285,63 @@ namespace KronosVulkanJunk
 			m_UniformBuffers[i] = Kronos::CreateScope<Kronos::VulkanBuffer>(*m_Device, sizeof(UniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
 		}
 
+
+		// ImGui
+		{
+			VkDescriptorPoolSize poolSizes[] = {
+				{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+			};
+
+			VkDescriptorPoolCreateInfo poolInfo = {};
+			poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+			poolInfo.maxSets = 1000;
+			poolInfo.poolSizeCount = std::size(poolSizes);
+			poolInfo.pPoolSizes = poolSizes;
+
+			VkDescriptorPool imguiPool;
+			vkCreateDescriptorPool(m_Device->GetHandle(), &poolInfo, nullptr, &imguiPool);
+
+			ImGui::CreateContext();
+
+			ImGui_ImplWin32_Init(m_Window->GetHWND_TMP());
+
+			//this initializes imgui for Vulkan
+			ImGui_ImplVulkan_InitInfo init_info = {};
+			init_info.Instance = m_Instance->GetHandle();
+			init_info.PhysicalDevice = m_PhysicalDevice->GetHandle();
+			init_info.Device = m_Device->GetHandle();
+			init_info.Queue = m_Queue;
+			init_info.DescriptorPool = imguiPool;
+			init_info.MinImageCount = 3;
+			init_info.ImageCount = 3;
+			init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+			ImGui_ImplVulkan_Init(&init_info, m_RenderPass);
+
+			//execute a gpu command to upload imgui font textures
+			VkCommandBuffer commandBuffer = m_Device->CreateCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY, true);
+			ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+			m_Device->SubmitCommandBuffer(commandBuffer, m_Queue);
+
+			//clear font textures from cpu data
+			ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+			//add the destroy the imgui created structures
+			//vkDestroyDescriptorPool(m_Device->GetHandle(), imguiPool, nullptr);
+			//ImGui_ImplVulkan_Shutdown();
+		}
+
 		CreateDescriptorPool();
 		CreateDescriptorSets();
 		CreateCommandBuffers();
@@ -334,6 +389,7 @@ namespace KronosVulkanJunk
 
 	void Application::Render()
 	{
+
 		// Draw frame
 		vkWaitForFences(m_Device->GetHandle(), 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX);
 
@@ -346,6 +402,7 @@ namespace KronosVulkanJunk
 		}
 		m_ImagesInFlight[imageIndex] = m_InFlightFences[m_CurrentFrame];
 
+		CreateCommandBuffers();
 		UpdateUniformBuffer(imageIndex);
 
 		VkSubmitInfo submitInfo{};
@@ -372,14 +429,12 @@ namespace KronosVulkanJunk
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = signalSemaphores;
 
 		VkSwapchainKHR swapChains[] = { m_Swapchain->GetHandle() };
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = swapChains;
-
 		presentInfo.pImageIndices = &imageIndex;
 
 		vkQueuePresentKHR(m_PresentQueue, &presentInfo);
@@ -720,6 +775,23 @@ namespace KronosVulkanJunk
 			renderPassInfo.pClearValues = clearValues.data();
 
 			vkCmdBeginRenderPass(m_CommandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+
+			// ImGui
+			{
+				ImGui_ImplVulkan_NewFrame();
+				ImGui_ImplWin32_NewFrame();
+
+				ImGui::NewFrame();
+
+				ImGui::ShowDemoWindow();
+
+				ImGui::EndFrame();
+
+				ImGui::Render();
+
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[i]);
+			}
 
 			vkCmdBindPipeline(m_CommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
 
