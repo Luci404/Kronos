@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <string>
+#include <map>
 
 namespace Kronos
 {
@@ -57,13 +58,65 @@ namespace Kronos
 		KEY_Z
 	};
 
+	class Delegate
+	{
+	public:
+		void Invoke()
+		{
+			for (auto pair : m_ListenerMap)
+			{
+				pair.first->pair.second();
+			}
+		}
+
+		template<typename T>
+		void RegisterListener(T* instance, void(T::*function)()) {}
+
+		template<typename T>
+		void UnregisterListener(T* instance) {}
+
+	private:
+		std::map<void*, void(*)()> m_ListenerMap;
+	};
+
+	class DelegateTest1
+	{
+	public:
+		DelegateTest1()
+		{
+		}
+
+		void Tick()
+		{
+			m_TickDelegate.Invoke();
+		}
+
+		Delegate& GetTickDelegate() { return m_TickDelegate; }
+
+	private:
+		Delegate m_TickDelegate;
+	};
+
+	class DelegateTest2
+	{
+	public:
+		DelegateTest2(DelegateTest1 other)
+		{
+			other.GetTickDelegate().RegisterListener(this, OnTick);
+		}
+
+		void OnTick()
+		{
+
+		}
+	};
+
+
 	class InputManager
 	{
 	public:
 		template <typename T>
 		static void BindKey(EInputKey key, EInputKeyState state, T *instance, void (T::*function)()) {}
-
-		template <typename T>
-		static void BindAction(const std::string &name, EInputKeyState state, T *instance, void (T::*function)()) {}
+		static void InvokeKey(EInputKey key, EInputKeyState state) {}
 	};
 }
