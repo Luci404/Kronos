@@ -4,6 +4,14 @@
 #include <iostream>
 #include <vector>
 
+#include <thread>
+#include <algorithm>
+#include <sstream>
+#include <mutex>
+#include <functional>
+#include <memory>
+#include <atomic>
+
 #define MAXIMUM_TASK_DEPENDENCIES 4
 
 enum class EDependencyType : uint8_t { Precede, Succeeds, Conditional };
@@ -82,6 +90,31 @@ private:
 class ExecutionScheduler
 {
 public:
+    static void Run()
+    {
+        uint32_t threadCount = std::max(1u, std::thread::hardware_concurrency());
+
+        std::cout << (std::ostringstream{} << "Thread count: " << threadCount << '\n').str();
+
+        for (uint32_t i = 0; i < threadCount; ++i)
+        {
+            std::thread worker([](uint32_t threadIndex) {
+                while(true)
+                {
+                    // std::cout << (std::ostringstream{} << "Thread " << threadIndex << '\n').str();
+                    while(m_ExecutionNodeCount > 0)
+                    {
+
+                    }
+                }
+            }, i);
+        
+            worker.detach();
+        }
+
+        while(true) {}
+    }
+
     static void AppendGraph(ExecutionGraph* executionGraph)
     {
         m_ExecutionNodes.push_back(static_cast<IExecutionNode*>(executionGraph));
@@ -91,6 +124,7 @@ private:
     static std::vector<IExecutionNode*> m_ExecutionNodes;
 };
 
+std::mutex<int> m_ExecutionNodeCount;
 std::vector<IExecutionNode*> ExecutionScheduler::m_ExecutionNodes = std::vector<IExecutionNode*>();
 
 
@@ -149,4 +183,6 @@ int main(int argc, char** argv)
 	applicationExecutionGraph.AddDependency<EDependencyType::Precede>(terminationNode, initializationNode);
 	
 	ExecutionScheduler::AppendGraph(&applicationExecutionGraph);
+
+    ExecutionScheduler::Run();
 }
