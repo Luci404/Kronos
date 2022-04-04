@@ -139,11 +139,12 @@ public:
                         IExecutionNode* executionNode;
 
                         m_ExecutionNodesLock.Lock();
-                        executionNode = m_ExecutionNodes.front();
+                        if (m_ExecutionNodes.size() <= 0) continue;
+                        executionNode = std::move(m_ExecutionNodes.front());
                         m_ExecutionNodes.pop_front();
                         m_ExecutionNodesLock.Unlock();
 
-                        //std::cout << (std::ostringstream{} << "[" << threadIndex << "] Executing Node | Node: " << reinterpret_cast<void*>(executionNode) << '\n').str();
+                        std::cout << (std::ostringstream{} << "[" << threadIndex << "] Executing Node | Node: " << reinterpret_cast<void*>(executionNode) << '\n').str();
                         executionNode->Execute();
                     }
                 }
