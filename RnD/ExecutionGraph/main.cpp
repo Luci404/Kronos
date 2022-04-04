@@ -44,7 +44,6 @@ private:
 	void(*m_Function)();
 };
 
-
 class ExecutionGraph : public IExecutionNode
 {
 public:
@@ -87,6 +86,39 @@ private:
     const std::string m_DebugName;
 };
 
+struct SpinLock
+{
+	/*
+	TODO: Consider using the PAUSE instruction to avoid blocking other CPU cores sharing the same load-store uint.
+	Refer to the "Reducing load-store unit utilization" section of "Correctly implementing a spinlock in C++" by Erik Rigtorp (https://rigtorp.se/spinlock/).
+	*/
+	void Lock() noexcept
+	{
+		for (;;) {
+			// Optimistically assume the lock is free on the first try
+			if (!m_Lock.exchange(true, std::memory_order_acquire)) {
+				return;
+			}
+			// Wait for lock to be released without generating cache misses
+			while (m_Lock.load(std::memory_order_relaxed));
+		}
+	}
+
+	bool TryLock() noexcept {
+		// First do a relaxed load to check if lock is free in order to prevent
+		// unnecessary cache misses if someone does while(!try_lock())
+		return !m_Lock.load(std::memory_order_relaxed) && !m_Lock.exchange(true, std::memory_order_acquire);
+	}
+
+	void Unlock() noexcept
+	{
+		m_Lock.store(false, std::memory_order_release);
+	}
+
+private:
+	std::atomic<bool> m_Lock = { false };
+};
+
 class ExecutionScheduler
 {
 public:
@@ -102,9 +134,17 @@ public:
                 while(true)
                 {
                     // std::cout << (std::ostringstream{} << "Thread " << threadIndex << '\n').str();
-                    while(m_ExecutionNodeCount > 0)
+                    while(m_ExecutionNodes.size() > 0)
                     {
+                        IExecutionNode* executionNode;
 
+                        m_ExecutionNodesLock.Lock();
+                        executionNode = m_ExecutionNodes.front();
+                        m_ExecutionNodes.pop_front();
+                        m_ExecutionNodesLock.Unlock();
+
+                        //std::cout << (std::ostringstream{} << "[" << threadIndex << "] Executing Node | Node: " << reinterpret_cast<void*>(executionNode) << '\n').str();
+                        executionNode->Execute();
                     }
                 }
             }, i);
@@ -121,12 +161,12 @@ public:
     }
 
 private:
-    static std::vector<IExecutionNode*> m_ExecutionNodes;
+    static std::deque<IExecutionNode*> m_ExecutionNodes;
+    static SpinLock m_ExecutionNodesLock;
 };
 
-std::mutex<int> m_ExecutionNodeCount;
-std::vector<IExecutionNode*> ExecutionScheduler::m_ExecutionNodes = std::vector<IExecutionNode*>();
-
+std::deque<IExecutionNode*> ExecutionScheduler::m_ExecutionNodes = std::deque<IExecutionNode*>();
+SpinLock ExecutionScheduler::m_ExecutionNodesLock = SpinLock();
 
 /// EXAMPLE
 
